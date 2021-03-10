@@ -12,12 +12,11 @@ import (
 )
 
 func (r *mutationResolver) CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error) {
-	id := models.NewID()
 	newLand := &models.Land{
-		ID:            id,
-		TokenId:       input.TokenID,
+		ID:            input.TokenID,
 		PostalCode:    input.PostalCode,
 		SateliteImage: input.SateliteImage,
+		State:         input.State,
 		Location:      input.Location,
 	}
 	r.ORM.Store.Create(&newLand)

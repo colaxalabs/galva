@@ -37,7 +37,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	Land() LandResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -52,7 +51,7 @@ type ComplexityRoot struct {
 		Location      func(childComplexity int) int
 		PostalCode    func(childComplexity int) int
 		SateliteImage func(childComplexity int) int
-		TokenId       func(childComplexity int) int
+		State         func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
 
@@ -61,18 +60,17 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Lands func(childComplexity int) int
+		Lands          func(childComplexity int) int
+		NearByAndState func(childComplexity int, input model.LocaleAndState) int
 	}
 }
 
-type LandResolver interface {
-	ID(ctx context.Context, obj *models.Land) (string, error)
-}
 type MutationResolver interface {
 	CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error)
 }
 type QueryResolver interface {
 	Lands(ctx context.Context) ([]*models.Land, error)
+	NearByAndState(ctx context.Context, input model.LocaleAndState) ([]*models.Land, error)
 }
 
 type executableSchema struct {
@@ -125,12 +123,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Land.SateliteImage(childComplexity), true
 
-	case "Land.tokenId":
-		if e.complexity.Land.TokenId == nil {
+	case "Land.state":
+		if e.complexity.Land.State == nil {
 			break
 		}
 
-		return e.complexity.Land.TokenId(childComplexity), true
+		return e.complexity.Land.State(childComplexity), true
 
 	case "Land.updatedAt":
 		if e.complexity.Land.UpdatedAt == nil {
@@ -157,6 +155,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Lands(childComplexity), true
+
+	case "Query.nearByAndState":
+		if e.complexity.Query.NearByAndState == nil {
+			break
+		}
+
+		args, err := ec.field_Query_nearByAndState_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.NearByAndState(childComplexity, args["input"].(model.LocaleAndState)), true
 
 	}
 	return 0, false
@@ -225,9 +235,15 @@ var sources = []*ast.Source{
 	{Name: "graph/schema/input/input.graphqls", Input: `# GraphQL schema
 input NewLand {
   tokenId: Int!
-  postalCode: Int!
+  postalCode: String!
   sateliteImage: String!
+  state: String!
   location: String!
+}
+
+input LocaleAndState {
+  state: String!
+  postal: String!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema/mutation/mutation.graphqls", Input: `# GraphQL schema
@@ -238,6 +254,7 @@ type Mutation {
 	{Name: "graph/schema/query/query.graphqls", Input: `# GraphQL schema
 type Query {
   lands: [Land!]!
+  nearByAndState(input: LocaleAndState!): [Land!]!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema/shared/shared.graphqls", Input: `# GraphQL schema
@@ -245,9 +262,9 @@ scalar Time
 
 type Land {
   id: ID!
-  tokenId: Int!
-  postalCode: Int!
+  postalCode: String!
   location: String!
+  state: String!
   sateliteImage: String!
   createdAt: Time!
   updatedAt: Time!
@@ -288,6 +305,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_nearByAndState_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.LocaleAndState
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNLocaleAndState2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐLocaleAndState(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -340,41 +372,6 @@ func (ec *executionContext) _Land_id(ctx context.Context, field graphql.Collecte
 		Object:     "Land",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Land().ID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Land_tokenId(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Land",
-		Field:      field,
-		Args:       nil,
 		IsMethod:   false,
 		IsResolver: false,
 	}
@@ -382,7 +379,7 @@ func (ec *executionContext) _Land_tokenId(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TokenId, nil
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -396,7 +393,7 @@ func (ec *executionContext) _Land_tokenId(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Land_postalCode(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
@@ -429,9 +426,9 @@ func (ec *executionContext) _Land_postalCode(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Land_location(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
@@ -453,6 +450,41 @@ func (ec *executionContext) _Land_location(ctx context.Context, field graphql.Co
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Location, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Land_state(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Land",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.State, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -635,6 +667,48 @@ func (ec *executionContext) _Query_lands(ctx context.Context, field graphql.Coll
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().Lands(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Land)
+	fc.Result = res
+	return ec.marshalNLand2ᚕᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐLandᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_nearByAndState(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_nearByAndState_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().NearByAndState(rctx, args["input"].(model.LocaleAndState))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1809,6 +1883,34 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputLocaleAndState(ctx context.Context, obj interface{}) (model.LocaleAndState, error) {
+	var it model.LocaleAndState
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "state":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+			it.State, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "postal":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postal"))
+			it.Postal, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewLand(ctx context.Context, obj interface{}) (model.NewLand, error) {
 	var it model.NewLand
 	var asMap = obj.(map[string]interface{})
@@ -1827,7 +1929,7 @@ func (ec *executionContext) unmarshalInputNewLand(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
-			it.PostalCode, err = ec.unmarshalNInt2int(ctx, v)
+			it.PostalCode, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -1836,6 +1938,14 @@ func (ec *executionContext) unmarshalInputNewLand(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sateliteImage"))
 			it.SateliteImage, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "state":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
+			it.State, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -1873,48 +1983,39 @@ func (ec *executionContext) _Land(ctx context.Context, sel ast.SelectionSet, obj
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Land")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Land_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "tokenId":
-			out.Values[i] = ec._Land_tokenId(ctx, field, obj)
+			out.Values[i] = ec._Land_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "postalCode":
 			out.Values[i] = ec._Land_postalCode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "location":
 			out.Values[i] = ec._Land_location(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
+			}
+		case "state":
+			out.Values[i] = ec._Land_state(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
 			}
 		case "sateliteImage":
 			out.Values[i] = ec._Land_sateliteImage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "createdAt":
 			out.Values[i] = ec._Land_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "updatedAt":
 			out.Values[i] = ec._Land_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -1982,6 +2083,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_lands(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "nearByAndState":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_nearByAndState(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2262,13 +2377,13 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalID(v)
+func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
+func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2341,6 +2456,11 @@ func (ec *executionContext) marshalNLand2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋ
 		return graphql.Null
 	}
 	return ec._Land(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNLocaleAndState2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐLocaleAndState(ctx context.Context, v interface{}) (model.LocaleAndState, error) {
+	res, err := ec.unmarshalInputLocaleAndState(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNNewLand2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐNewLand(ctx context.Context, v interface{}) (model.NewLand, error) {

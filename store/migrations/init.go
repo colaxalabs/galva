@@ -6,7 +6,7 @@ import (
 )
 
 func migrate() error {
-	orm, err := store.Factory()
+	orm, err := store.NewORM()
 	defer orm.Store.Close()
 
 	err = orm.Store.AutoMigrate(

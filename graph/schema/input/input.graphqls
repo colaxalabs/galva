@@ -1,7 +1,13 @@
 # GraphQL schema
 input NewLand {
   tokenId: Int!
-  postalCode: Int!
+  postalCode: String!
   sateliteImage: String!
+  state: String!
   location: String!
+}
+
+input LocaleAndState {
+  state: String!
+  postal: String!
 }
