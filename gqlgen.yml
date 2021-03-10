@@ -54,3 +54,6 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  Land:
+    model:
+      - github.com/3dw1nM0535/galva/store/models.Land
