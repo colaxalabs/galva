@@ -29,7 +29,7 @@ type ORM struct {
 	Store *gorm.DB
 }
 
-func Factory() (*ORM, error) {
+func NewORM() (*ORM, error) {
 	dbURI := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbPass, dbName, sslMode)
 	// pass URI and dialect to gorm.Open
 	dbm, err := gorm.Open("postgres", dbURI)
