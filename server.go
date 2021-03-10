@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/3dw1nM0535/galva/graph"
 	"github.com/3dw1nM0535/galva/graph/generated"
@@ -23,19 +26,17 @@ func init() {
 
 func main() {
 
-	orm, err := store.Factory()
+	orm, err := store.NewORM()
 	if err != nil {
 		fmt.Printf("Error while setting up ORM: " + err.Error())
 	}
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graph.New(orm)}))
-	/*
-	 *srv.SetRecoverFunc(func(ctx context.Context, err interface{}) (userMessage error) {
-	 *        // send panic to sentry
-	 *        log.Print(err)
-	 *        debug.PrintStack()
-	 *        return errors.New("user message on panic")
-	 *})
-	 */
+	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) (userMessage error) {
+		// send panic to sentry
+		log.Print(err)
+		debug.PrintStack()
+		return errors.New("user message on panic")
+	})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
