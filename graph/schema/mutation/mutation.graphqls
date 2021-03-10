@@ -1,0 +1,4 @@
+# GraphQL schema
+type Mutation {
+  createTodo(input: NewTodo!): Todo!
+}

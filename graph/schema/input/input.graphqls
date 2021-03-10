@@ -1,0 +1,5 @@
+# GraphQL schema
+input NewTodo {
+  text: String!
+  userId: String!
+}

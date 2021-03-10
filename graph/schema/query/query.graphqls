@@ -1,0 +1,4 @@
+# GraphQL schema
+type Query {
+  todos: [Todo!]!
+}
