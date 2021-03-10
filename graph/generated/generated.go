@@ -47,15 +47,13 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Land struct {
-		CreatedAt  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Location   func(childComplexity int) int
-		PostalCode func(childComplexity int) int
-		Size       func(childComplexity int) int
-		SizeUnit   func(childComplexity int) int
-		Title      func(childComplexity int) int
-		TokenId    func(childComplexity int) int
-		UpdatedAt  func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Location      func(childComplexity int) int
+		PostalCode    func(childComplexity int) int
+		SateliteImage func(childComplexity int) int
+		TokenId       func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -69,8 +67,6 @@ type ComplexityRoot struct {
 
 type LandResolver interface {
 	ID(ctx context.Context, obj *models.Land) (string, error)
-
-	Size(ctx context.Context, obj *models.Land) (string, error)
 }
 type MutationResolver interface {
 	CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error)
@@ -122,26 +118,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Land.PostalCode(childComplexity), true
 
-	case "Land.size":
-		if e.complexity.Land.Size == nil {
+	case "Land.sateliteImage":
+		if e.complexity.Land.SateliteImage == nil {
 			break
 		}
 
-		return e.complexity.Land.Size(childComplexity), true
-
-	case "Land.sizeUnit":
-		if e.complexity.Land.SizeUnit == nil {
-			break
-		}
-
-		return e.complexity.Land.SizeUnit(childComplexity), true
-
-	case "Land.title":
-		if e.complexity.Land.Title == nil {
-			break
-		}
-
-		return e.complexity.Land.Title(childComplexity), true
+		return e.complexity.Land.SateliteImage(childComplexity), true
 
 	case "Land.tokenId":
 		if e.complexity.Land.TokenId == nil {
@@ -243,10 +225,8 @@ var sources = []*ast.Source{
 	{Name: "graph/schema/input/input.graphqls", Input: `# GraphQL schema
 input NewLand {
   tokenId: Int!
-  title: String!
-  size: Int!
-  sizeUnit: String!
   postalCode: Int!
+  sateliteImage: String!
   location: String!
 }
 `, BuiltIn: false},
@@ -266,11 +246,9 @@ scalar Time
 type Land {
   id: ID!
   tokenId: Int!
-  title: String!
-  size: String!
-  sizeUnit: String!
   postalCode: Int!
   location: String!
+  sateliteImage: String!
   createdAt: Time!
   updatedAt: Time!
 }
@@ -421,111 +399,6 @@ func (ec *executionContext) _Land_tokenId(ctx context.Context, field graphql.Col
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Land_title(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Land",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Title, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Land_size(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Land",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Land().Size(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Land_sizeUnit(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Land",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SizeUnit, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Land_postalCode(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -580,6 +453,41 @@ func (ec *executionContext) _Land_location(ctx context.Context, field graphql.Co
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Location, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Land_sateliteImage(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Land",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SateliteImage, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1915,35 +1823,19 @@ func (ec *executionContext) unmarshalInputNewLand(ctx context.Context, obj inter
 			if err != nil {
 				return it, err
 			}
-		case "title":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("title"))
-			it.Title, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "size":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
-			it.Size, err = ec.unmarshalNInt2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "sizeUnit":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sizeUnit"))
-			it.SizeUnit, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "postalCode":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
 			it.PostalCode, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "sateliteImage":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sateliteImage"))
+			it.SateliteImage, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -1999,30 +1891,6 @@ func (ec *executionContext) _Land(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "title":
-			out.Values[i] = ec._Land_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "size":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Land_size(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "sizeUnit":
-			out.Values[i] = ec._Land_sizeUnit(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "postalCode":
 			out.Values[i] = ec._Land_postalCode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -2030,6 +1898,11 @@ func (ec *executionContext) _Land(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "location":
 			out.Values[i] = ec._Land_location(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "sateliteImage":
+			out.Values[i] = ec._Land_sateliteImage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

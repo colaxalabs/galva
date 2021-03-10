@@ -1,9 +1,7 @@
 # GraphQL schema
 input NewLand {
   tokenId: Int!
-  title: String!
-  size: String!
-  sizeUnit: String!
   postalCode: Int!
+  sateliteImage: String!
   location: String!
 }

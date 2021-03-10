@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/3dw1nM0535/galva/graph/generated"
 	"github.com/3dw1nM0535/galva/store/models"
@@ -14,11 +13,6 @@ import (
 func (r *landResolver) ID(ctx context.Context, obj *models.Land) (string, error) {
 	id := obj.ID.String()
 	return id, nil
-}
-
-func (r *landResolver) Size(ctx context.Context, obj *models.Land) (string, error) {
-	fmt.Println(obj.Size.Text(10))
-	return obj.Size.Text(10), nil
 }
 
 // Land returns generated.LandResolver implementation.

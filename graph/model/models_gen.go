@@ -3,10 +3,8 @@
 package model
 
 type NewLand struct {
-	TokenID    int    `json:"tokenId"`
-	Title      string `json:"title"`
-	Size       int    `json:"size"`
-	SizeUnit   string `json:"sizeUnit"`
-	PostalCode int    `json:"postalCode"`
-	Location   string `json:"location"`
+	TokenID       int    `json:"tokenId"`
+	PostalCode    int    `json:"postalCode"`
+	SateliteImage string `json:"sateliteImage"`
+	Location      string `json:"location"`
 }

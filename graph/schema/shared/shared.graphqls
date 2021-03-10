@@ -4,11 +4,9 @@ scalar Time
 type Land {
   id: ID!
   tokenId: Int!
-  title: String!
-  size: String!
-  sizeUnit: String!
   postalCode: Int!
   location: String!
+  sateliteImage: String!
   createdAt: Time!
   updatedAt: Time!
 }
