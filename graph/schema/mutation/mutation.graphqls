@@ -1,4 +1,4 @@
 # GraphQL schema
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  createLand(input: NewLand!): Land!
 }

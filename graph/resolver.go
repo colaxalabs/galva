@@ -4,19 +4,17 @@ package graph
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 import (
-	"github.com/3dw1nM0535/galva/graph/model"
+	"github.com/3dw1nM0535/galva/store"
 )
 
+// Resolver returns the entry point
 type Resolver struct {
-	todos []*model.Todo
+	ORM *store.ORM
 }
 
-func New() *Resolver {
-	todos := make([]*model.Todo, 0)
-	todos = append(todos, &model.Todo{ID: "1", Text: "deploy some code", Done: false})
-	todos = append(todos, &model.Todo{ID: "2", Text: "write some tests", Done: false})
-
+// New returns a new resolver
+func New(orm *store.ORM) *Resolver {
 	return &Resolver{
-		todos: todos,
+		ORM: orm,
 	}
 }

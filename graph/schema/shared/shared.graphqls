@@ -1,12 +1,15 @@
 # GraphQL schema
-type Todo {
+scalar Time
+
+type Land {
   id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+  tokenId: Int!
+  title: String!
+  size: Int!
+  sizeUnit: String!
+  postalCode: Int!
+  location: String!
+  createdAt: Time!
+  updatedAt: Time!
 }
 
-type User {
-  id: ID!
-  name: String!
-}

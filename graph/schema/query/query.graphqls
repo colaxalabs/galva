@@ -1,4 +1,4 @@
 # GraphQL schema
 type Query {
-  todos: [Todo!]!
+  lands: [Land!]!
 }

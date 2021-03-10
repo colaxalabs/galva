@@ -1,5 +1,9 @@
 # GraphQL schema
-input NewTodo {
-  text: String!
-  userId: String!
+input NewLand {
+  tokenId: Int!
+  title: String!
+  size: Int!
+  sizeUnit: String!
+  postalCode: Int!
+  location: String!
 }
