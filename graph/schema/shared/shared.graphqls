@@ -5,7 +5,7 @@ type Land {
   id: ID!
   tokenId: Int!
   title: String!
-  size: Int!
+  size: String!
   sizeUnit: String!
   postalCode: Int!
   location: String!

@@ -70,7 +70,7 @@ type ComplexityRoot struct {
 type LandResolver interface {
 	ID(ctx context.Context, obj *models.Land) (string, error)
 
-	Size(ctx context.Context, obj *models.Land) (int, error)
+	Size(ctx context.Context, obj *models.Land) (string, error)
 }
 type MutationResolver interface {
 	CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error)
@@ -267,7 +267,7 @@ type Land {
   id: ID!
   tokenId: Int!
   title: String!
-  size: Int!
+  size: String!
   sizeUnit: String!
   postalCode: Int!
   location: String!
@@ -486,9 +486,9 @@ func (ec *executionContext) _Land_size(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Land_sizeUnit(ctx context.Context, field graphql.CollectedField, obj *models.Land) (ret graphql.Marshaler) {

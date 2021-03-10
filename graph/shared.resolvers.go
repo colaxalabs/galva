@@ -12,11 +12,13 @@ import (
 )
 
 func (r *landResolver) ID(ctx context.Context, obj *models.Land) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	id := obj.ID.String()
+	return id, nil
 }
 
-func (r *landResolver) Size(ctx context.Context, obj *models.Land) (int, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *landResolver) Size(ctx context.Context, obj *models.Land) (string, error) {
+	fmt.Println(obj.Size.Text(10))
+	return obj.Size.Text(10), nil
 }
 
 // Land returns generated.LandResolver implementation.

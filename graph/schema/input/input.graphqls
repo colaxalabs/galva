@@ -2,7 +2,7 @@
 input NewLand {
   tokenId: Int!
   title: String!
-  size: Int!
+  size: String!
   sizeUnit: String!
   postalCode: Int!
   location: String!

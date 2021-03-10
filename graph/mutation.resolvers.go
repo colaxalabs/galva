@@ -5,7 +5,7 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"math/big"
 
 	"github.com/3dw1nM0535/galva/graph/generated"
 	"github.com/3dw1nM0535/galva/graph/model"
@@ -13,7 +13,18 @@ import (
 )
 
 func (r *mutationResolver) CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error) {
-	panic(fmt.Errorf("not implemented"))
+	id := models.NewID()
+	newLand := &models.Land{
+		ID:         id,
+		TokenId:    input.TokenID,
+		Title:      input.Title,
+		Size:       new(big.Int).SetInt64(int64(input.Size)),
+		SizeUnit:   input.SizeUnit,
+		PostalCode: input.PostalCode,
+		Location:   input.Location,
+	}
+	r.ORM.Store.Create(&newLand)
+	return newLand, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
