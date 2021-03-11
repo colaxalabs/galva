@@ -7,5 +7,11 @@ type NewLand struct {
 	PostalCode    string `json:"postalCode"`
 	SateliteImage string `json:"sateliteImage"`
 	State         string `json:"state"`
+	Address       string `json:"address"`
 	Location      string `json:"location"`
+}
+
+type RegisterUser struct {
+	Address   string `json:"address"`
+	Signature string `json:"signature"`
 }

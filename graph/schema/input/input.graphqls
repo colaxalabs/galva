@@ -4,6 +4,12 @@ input NewLand {
   postalCode: String!
   sateliteImage: String!
   state: String!
+  address: String!
   location: String!
+}
+
+input RegisterUser {
+  address: String!
+  signature: String!
 }
 

@@ -13,4 +13,6 @@ type Land struct {
 	Location      string    `gorm:"type:varchar(100);not_null;"`
 	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP;"`
 	UpdatedAt     time.Time
+	UserAddress   string
+	User          *User
 }

@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/99designs/gqlgen v0.13.0
 	github.com/btcsuite/btcd v0.21.0-beta // indirect
-	github.com/ethereum/go-ethereum v1.10.1 // indirect
+	github.com/ethereum/go-ethereum v1.10.1
 	github.com/gin-gonic/gin v1.6.3 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect

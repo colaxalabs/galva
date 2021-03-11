@@ -5,22 +5,49 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/3dw1nM0535/galva/graph/generated"
 	"github.com/3dw1nM0535/galva/graph/model"
 	"github.com/3dw1nM0535/galva/store/models"
+	"github.com/3dw1nM0535/galva/utils"
 )
 
 func (r *mutationResolver) CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error) {
+	targetUser := &models.User{}
+	parsedAddress := utils.ParseAddress(input.Address)
+	r.ORM.Store.Where("address = ?", parsedAddress).Find(&targetUser)
+	if targetUser.ID == nil {
+		return nil, fmt.Errorf("user account %s cannot be found", parsedAddress)
+	}
 	newLand := &models.Land{
 		ID:            input.TokenID,
 		PostalCode:    input.PostalCode,
 		SateliteImage: input.SateliteImage,
 		State:         input.State,
 		Location:      input.Location,
+		UserAddress:   utils.ParseAddress(input.Address),
+		User:          targetUser,
 	}
-	r.ORM.Store.Create(&newLand)
+	r.ORM.Store.Save(&newLand)
 	return newLand, nil
+}
+
+func (r *mutationResolver) AddUser(ctx context.Context, input model.RegisterUser) (*models.User, error) {
+	user := &models.User{}
+	parsedAddress := utils.ParseAddress(input.Address)
+	r.ORM.Store.Where("address = ?", parsedAddress).Find(&user)
+	if user.ID != nil {
+		return nil, fmt.Errorf("duplicate user account: %s", parsedAddress)
+	}
+	id := models.NewID()
+	newUser := &models.User{
+		ID:        id,
+		Address:   parsedAddress,
+		Signature: input.Signature,
+	}
+	r.ORM.Store.Save(&newUser)
+	return newUser, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

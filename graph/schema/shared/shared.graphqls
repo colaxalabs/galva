@@ -9,5 +9,16 @@ type Land {
   sateliteImage: String!
   createdAt: Time!
   updatedAt: Time!
+  userAddress: String!
+  user: User!
+}
+
+type User {
+  id: ID!
+  address: String!
+  signature: String!
+  createdAt: Time!
+  updatedAt: Time!
+  properties: [Land!]!
 }
 

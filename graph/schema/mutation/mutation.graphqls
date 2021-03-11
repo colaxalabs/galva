@@ -1,4 +1,5 @@
 # GraphQL schema
 type Mutation {
   createLand(input: NewLand!): Land!
+  addUser(input: RegisterUser!): User!
 }

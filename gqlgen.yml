@@ -57,3 +57,12 @@ models:
   Land:
     model:
       - github.com/3dw1nM0535/galva/store/models.Land
+    fields:
+      user:
+        resolver: true # property owner(user) resolver will be generated
+  User:
+    model:
+      - github.com/3dw1nM0535/galva/store/models.User
+    fields:
+      properties:
+        resolver: true # user properties resolver will be generated

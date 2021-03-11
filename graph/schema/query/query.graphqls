@@ -2,4 +2,5 @@
 type Query {
   lands: [Land!]!
   nearByPostal(postal: String!): [Land!]!
+  user(address: String!): User!
 }
