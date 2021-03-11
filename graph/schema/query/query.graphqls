@@ -1,5 +1,5 @@
 # GraphQL schema
 type Query {
   lands: [Land!]!
-  nearByAndState(input: LocaleAndState!): [Land!]!
+  nearByPostal(postal: String!): [Land!]!
 }

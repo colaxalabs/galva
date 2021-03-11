@@ -60,8 +60,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Lands          func(childComplexity int) int
-		NearByAndState func(childComplexity int, input model.LocaleAndState) int
+		Lands        func(childComplexity int) int
+		NearByPostal func(childComplexity int, postal string) int
 	}
 }
 
@@ -70,7 +70,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Lands(ctx context.Context) ([]*models.Land, error)
-	NearByAndState(ctx context.Context, input model.LocaleAndState) ([]*models.Land, error)
+	NearByPostal(ctx context.Context, postal string) ([]*models.Land, error)
 }
 
 type executableSchema struct {
@@ -156,17 +156,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Lands(childComplexity), true
 
-	case "Query.nearByAndState":
-		if e.complexity.Query.NearByAndState == nil {
+	case "Query.nearByPostal":
+		if e.complexity.Query.NearByPostal == nil {
 			break
 		}
 
-		args, err := ec.field_Query_nearByAndState_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_nearByPostal_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.NearByAndState(childComplexity, args["input"].(model.LocaleAndState)), true
+		return e.complexity.Query.NearByPostal(childComplexity, args["postal"].(string)), true
 
 	}
 	return 0, false
@@ -241,10 +241,6 @@ input NewLand {
   location: String!
 }
 
-input LocaleAndState {
-  state: String!
-  postal: String!
-}
 `, BuiltIn: false},
 	{Name: "graph/schema/mutation/mutation.graphqls", Input: `# GraphQL schema
 type Mutation {
@@ -254,7 +250,7 @@ type Mutation {
 	{Name: "graph/schema/query/query.graphqls", Input: `# GraphQL schema
 type Query {
   lands: [Land!]!
-  nearByAndState(input: LocaleAndState!): [Land!]!
+  nearByPostal(postal: String!): [Land!]!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema/shared/shared.graphqls", Input: `# GraphQL schema
@@ -308,18 +304,18 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_nearByAndState_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_nearByPostal_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.LocaleAndState
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNLocaleAndState2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐLocaleAndState(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["postal"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postal"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["postal"] = arg0
 	return args, nil
 }
 
@@ -683,7 +679,7 @@ func (ec *executionContext) _Query_lands(ctx context.Context, field graphql.Coll
 	return ec.marshalNLand2ᚕᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐLandᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_nearByAndState(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_nearByPostal(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -700,7 +696,7 @@ func (ec *executionContext) _Query_nearByAndState(ctx context.Context, field gra
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_nearByAndState_args(ctx, rawArgs)
+	args, err := ec.field_Query_nearByPostal_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -708,7 +704,7 @@ func (ec *executionContext) _Query_nearByAndState(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().NearByAndState(rctx, args["input"].(model.LocaleAndState))
+		return ec.resolvers.Query().NearByPostal(rctx, args["postal"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1883,34 +1879,6 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputLocaleAndState(ctx context.Context, obj interface{}) (model.LocaleAndState, error) {
-	var it model.LocaleAndState
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "state":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("state"))
-			it.State, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "postal":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postal"))
-			it.Postal, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputNewLand(ctx context.Context, obj interface{}) (model.NewLand, error) {
 	var it model.NewLand
 	var asMap = obj.(map[string]interface{})
@@ -2088,7 +2056,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "nearByAndState":
+		case "nearByPostal":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -2096,7 +2064,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_nearByAndState(ctx, field)
+				res = ec._Query_nearByPostal(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2456,11 +2424,6 @@ func (ec *executionContext) marshalNLand2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋ
 		return graphql.Null
 	}
 	return ec._Land(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNLocaleAndState2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐLocaleAndState(ctx context.Context, v interface{}) (model.LocaleAndState, error) {
-	res, err := ec.unmarshalInputLocaleAndState(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNNewLand2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐNewLand(ctx context.Context, v interface{}) (model.NewLand, error) {

@@ -2,11 +2,6 @@
 
 package model
 
-type LocaleAndState struct {
-	State  string `json:"state"`
-	Postal string `json:"postal"`
-}
-
 type NewLand struct {
 	TokenID       int    `json:"tokenId"`
 	PostalCode    string `json:"postalCode"`

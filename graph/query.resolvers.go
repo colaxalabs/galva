@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/3dw1nM0535/galva/graph/generated"
-	"github.com/3dw1nM0535/galva/graph/model"
 	"github.com/3dw1nM0535/galva/store/models"
 )
 
@@ -17,9 +16,9 @@ func (r *queryResolver) Lands(ctx context.Context) ([]*models.Land, error) {
 	return lands, nil
 }
 
-func (r *queryResolver) NearByAndState(ctx context.Context, input model.LocaleAndState) ([]*models.Land, error) {
+func (r *queryResolver) NearByPostal(ctx context.Context, postal string) ([]*models.Land, error) {
 	lands := []*models.Land{}
-	r.ORM.Store.Where("postal_code = ? AND state = ?", input.Postal, input.State).Find(&lands)
+	r.ORM.Store.Where("postal_code = ? AND state = ?", postal, "Leasing").Find(&lands)
 	return lands, nil
 }
 
