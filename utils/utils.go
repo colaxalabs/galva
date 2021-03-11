@@ -1,5 +1,10 @@
 package utils
 
+import (
+	"github.com/ethereum/go-ethereum/common"
+)
+
+// IsQuoted returns true/false if input is quoted
 func IsQuoted(input []byte) bool {
 	return len(input) >= 2 &&
 		((input[0] == '"' && input[len(input)-1] == '"') ||
@@ -12,4 +17,9 @@ func RemoveQuotes(input []byte) []byte {
 		return input[1 : len(input)-1]
 	}
 	return input
+}
+
+// ParseAddress returns Ethereum address as string
+func ParseAddress(input string) string {
+	return common.HexToAddress(input).String()
 }
