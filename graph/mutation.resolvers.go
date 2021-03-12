@@ -14,12 +14,20 @@ import (
 )
 
 func (r *mutationResolver) CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error) {
+	// Check that there is such existing user
 	targetUser := &models.User{}
 	parsedAddress := utils.ParseAddress(input.Address)
 	r.ORM.Store.Where("address = ?", parsedAddress).Find(&targetUser)
 	if targetUser.ID == nil {
 		return nil, fmt.Errorf("user account %s cannot be found", parsedAddress)
 	}
+	// Check that there is no such existing property
+	targetLand := &models.Land{}
+	r.ORM.Store.Where("id = ?", input.TokenID).Find(&targetLand)
+	if targetLand.ID != 0 {
+		return nil, fmt.Errorf("duplicate land record %d", input.TokenID)
+	}
+	// Proceed to creating property
 	newLand := &models.Land{
 		ID:            input.TokenID,
 		PostalCode:    input.PostalCode,
