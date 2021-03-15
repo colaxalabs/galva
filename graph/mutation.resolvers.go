@@ -114,12 +114,74 @@ func (r *mutationResolver) CreateOffer(ctx context.Context, input model.OfferInp
 func (r *mutationResolver) ChangeState(ctx context.Context, input model.StateInput) (*models.Land, error) {
 	land := &models.Land{}
 	r.ORM.Store.Where("id = ?", input.ID).Find(&land)
-	if land == nil {
+	if land.ID == 0 {
 		return nil, fmt.Errorf("unable to find property %v", input.ID)
 	}
 	land.State = input.State
 	r.ORM.Store.Save(&land)
 	return land, nil
+}
+
+func (r *mutationResolver) TenantSigns(ctx context.Context, input model.SigningInput) (*models.Offer, error) {
+	parsedSigner := utils.ParseAddress(input.Signer)
+	// Find signer
+	signer := &models.User{}
+	r.ORM.Store.Where("address = ?", parsedSigner).Find(&signer)
+	if signer.ID == nil {
+		return nil, fmt.Errorf("unable to find signer %v", parsedSigner)
+	}
+	// Authenticate signer
+	if signer.Signature != input.Signature {
+		return nil, fmt.Errorf("unable to authenticate signature for signer %v", parsedSigner)
+	}
+	// Find offer
+	offer := &models.Offer{}
+	r.ORM.Store.Where("id = ?", input.ID).Find(&offer)
+	if offer.ID == nil {
+		return nil, fmt.Errorf("unable to find offer with id %v for signing", input.ID)
+	}
+	// Tenant cannot sign rejected offer
+	if !offer.Rejected {
+		return nil, fmt.Errorf("forbidden to sign rejected offer %v", input.ID)
+	}
+	// Only offer creator can sign the offer
+	if offer.Tenant != parsedSigner {
+		return nil, fmt.Errorf("forbidden to sign offer created by %v", parsedSigner)
+	}
+	offer.TenantSignature = input.Signature
+	r.ORM.Store.Save(&offer)
+	return offer, nil
+}
+
+func (r *mutationResolver) OwnerSigns(ctx context.Context, input model.SigningInput) (*models.Offer, error) {
+	parsedSigner := utils.ParseAddress(input.Signer)
+	// Find signer
+	signer := &models.User{}
+	r.ORM.Store.Where("address = ?", parsedSigner).Find(&signer)
+	if signer.ID == nil {
+		return nil, fmt.Errorf("unable to find signer %v", parsedSigner)
+	}
+	// Authenticate signer
+	if signer.Signature != input.Signature {
+		return nil, fmt.Errorf("unable to authenticate signature for signer %v", parsedSigner)
+	}
+	// Find offer
+	offer := &models.Offer{}
+	r.ORM.Store.Where("id = ?", input.ID).Find(&offer)
+	if offer.ID == nil {
+		return nil, fmt.Errorf("unable to find offer with id %v for signing", input.ID)
+	}
+	// Owner cannot sign before tenant signs
+	if offer.Owner == parsedSigner && offer.TenantSignature == "" {
+		return nil, fmt.Errorf("forbidden to sign offer %v before tenant", input.ID)
+	}
+	// Authenticate owner in the offer is the signer
+	if offer.Owner != parsedSigner {
+		return nil, fmt.Errorf("forbidden to sign offer where signer is not %v", offer.Owner)
+	}
+	offer.OwnerSignature = input.Signature
+	r.ORM.Store.Save(&offer)
+	return offer, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

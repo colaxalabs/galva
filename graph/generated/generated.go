@@ -66,21 +66,28 @@ type ComplexityRoot struct {
 		ChangeState func(childComplexity int, input model.StateInput) int
 		CreateLand  func(childComplexity int, input model.NewLand) int
 		CreateOffer func(childComplexity int, input model.OfferInput) int
+		OwnerSigns  func(childComplexity int, input model.SigningInput) int
+		TenantSigns func(childComplexity int, input model.SigningInput) int
 	}
 
 	Offer struct {
-		Cost       func(childComplexity int) int
-		Duration   func(childComplexity int) int
-		FullFilled func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Land       func(childComplexity int) int
-		LandID     func(childComplexity int) int
-		OfferOwner func(childComplexity int) int
-		Owner      func(childComplexity int) int
-		Purpose    func(childComplexity int) int
-		Size       func(childComplexity int) int
-		Tenant     func(childComplexity int) int
-		Title      func(childComplexity int) int
+		Accepted        func(childComplexity int) int
+		Cost            func(childComplexity int) int
+		Duration        func(childComplexity int) int
+		FullFilled      func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Land            func(childComplexity int) int
+		LandID          func(childComplexity int) int
+		OfferOwner      func(childComplexity int) int
+		Owner           func(childComplexity int) int
+		OwnerSignature  func(childComplexity int) int
+		Purpose         func(childComplexity int) int
+		Rejected        func(childComplexity int) int
+		Signed          func(childComplexity int) int
+		Size            func(childComplexity int) int
+		Tenant          func(childComplexity int) int
+		TenantSignature func(childComplexity int) int
+		Title           func(childComplexity int) int
 	}
 
 	Query struct {
@@ -103,13 +110,14 @@ type ComplexityRoot struct {
 
 type LandResolver interface {
 	LandOwner(ctx context.Context, obj *models.Land) (*models.User, error)
-	LandOffers(ctx context.Context, obj *models.Land) ([]*models.Offer, error)
 }
 type MutationResolver interface {
 	CreateLand(ctx context.Context, input model.NewLand) (*models.Land, error)
 	AddUser(ctx context.Context, input model.RegisterUser) (*models.User, error)
 	CreateOffer(ctx context.Context, input model.OfferInput) (*models.Offer, error)
 	ChangeState(ctx context.Context, input model.StateInput) (*models.Land, error)
+	TenantSigns(ctx context.Context, input model.SigningInput) (*models.Offer, error)
+	OwnerSigns(ctx context.Context, input model.SigningInput) (*models.Offer, error)
 }
 type OfferResolver interface {
 	ID(ctx context.Context, obj *models.Offer) (string, error)
@@ -263,6 +271,37 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateOffer(childComplexity, args["input"].(model.OfferInput)), true
 
+	case "Mutation.ownerSigns":
+		if e.complexity.Mutation.OwnerSigns == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_ownerSigns_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OwnerSigns(childComplexity, args["input"].(model.SigningInput)), true
+
+	case "Mutation.tenantSigns":
+		if e.complexity.Mutation.TenantSigns == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_tenantSigns_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TenantSigns(childComplexity, args["input"].(model.SigningInput)), true
+
+	case "Offer.accepted":
+		if e.complexity.Offer.Accepted == nil {
+			break
+		}
+
+		return e.complexity.Offer.Accepted(childComplexity), true
+
 	case "Offer.cost":
 		if e.complexity.Offer.Cost == nil {
 			break
@@ -319,12 +358,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Offer.Owner(childComplexity), true
 
+	case "Offer.ownerSignature":
+		if e.complexity.Offer.OwnerSignature == nil {
+			break
+		}
+
+		return e.complexity.Offer.OwnerSignature(childComplexity), true
+
 	case "Offer.purpose":
 		if e.complexity.Offer.Purpose == nil {
 			break
 		}
 
 		return e.complexity.Offer.Purpose(childComplexity), true
+
+	case "Offer.rejected":
+		if e.complexity.Offer.Rejected == nil {
+			break
+		}
+
+		return e.complexity.Offer.Rejected(childComplexity), true
+
+	case "Offer.signed":
+		if e.complexity.Offer.Signed == nil {
+			break
+		}
+
+		return e.complexity.Offer.Signed(childComplexity), true
 
 	case "Offer.size":
 		if e.complexity.Offer.Size == nil {
@@ -339,6 +399,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offer.Tenant(childComplexity), true
+
+	case "Offer.tenantSignature":
+		if e.complexity.Offer.TenantSignature == nil {
+			break
+		}
+
+		return e.complexity.Offer.TenantSignature(childComplexity), true
 
 	case "Offer.title":
 		if e.complexity.Offer.Title == nil {
@@ -535,6 +602,12 @@ input StateInput {
   state: String!
 }
 
+input SigningInput {
+  id: ID!
+  signer: String!
+  signature: String!
+}
+
 `, BuiltIn: false},
 	{Name: "graph/schema/mutation/mutation.graphqls", Input: `# GraphQL schema
 type Mutation {
@@ -542,6 +615,8 @@ type Mutation {
   addUser(input: RegisterUser!): User!
   createOffer(input: OfferInput!): Offer!
   changeState(input: StateInput!): Land!
+  tenantSigns(input: SigningInput!): Offer!
+  ownerSigns(input: SigningInput!): Offer!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema/query/query.graphqls", Input: `# GraphQL schema
@@ -591,6 +666,11 @@ type Offer {
   fullFilled: Boolean!
   offerOwner: User!
   land: Land!
+  tenantSignature: String!
+  ownerSignature: String!
+  rejected: Boolean!
+  accepted: Boolean!
+  signed: Boolean!
 }
 
 `, BuiltIn: false},
@@ -653,6 +733,36 @@ func (ec *executionContext) field_Mutation_createOffer_args(ctx context.Context,
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNOfferInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐOfferInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_ownerSigns_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.SigningInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNSigningInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐSigningInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_tenantSigns_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.SigningInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNSigningInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐSigningInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1085,14 +1195,14 @@ func (ec *executionContext) _Land_landOffers(ctx context.Context, field graphql.
 		Object:     "Land",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Land().LandOffers(rctx, obj)
+		return obj.LandOffers, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1275,6 +1385,90 @@ func (ec *executionContext) _Mutation_changeState(ctx context.Context, field gra
 	res := resTmp.(*models.Land)
 	fc.Result = res
 	return ec.marshalNLand2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐLand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_tenantSigns(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_tenantSigns_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TenantSigns(rctx, args["input"].(model.SigningInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Offer)
+	fc.Result = res
+	return ec.marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_ownerSigns(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_ownerSigns_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OwnerSigns(rctx, args["input"].(model.SigningInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Offer)
+	fc.Result = res
+	return ec.marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Offer_id(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
@@ -1695,6 +1889,181 @@ func (ec *executionContext) _Offer_land(ctx context.Context, field graphql.Colle
 	res := resTmp.(*models.Land)
 	fc.Result = res
 	return ec.marshalNLand2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐLand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Offer_tenantSignature(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TenantSignature, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Offer_ownerSignature(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OwnerSignature, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Offer_rejected(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Rejected, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Offer_accepted(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Accepted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Offer_signed(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Signed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_lands(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3433,6 +3802,42 @@ func (ec *executionContext) unmarshalInputRegisterUser(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSigningInput(ctx context.Context, obj interface{}) (model.SigningInput, error) {
+	var it model.SigningInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "signer":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signer"))
+			it.Signer, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "signature":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signature"))
+			it.Signature, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputStateInput(ctx context.Context, obj interface{}) (model.StateInput, error) {
 	var it model.StateInput
 	var asMap = obj.(map[string]interface{})
@@ -3535,19 +3940,10 @@ func (ec *executionContext) _Land(ctx context.Context, sel ast.SelectionSet, obj
 				return res
 			})
 		case "landOffers":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Land_landOffers(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Land_landOffers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3591,6 +3987,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "changeState":
 			out.Values[i] = ec._Mutation_changeState(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "tenantSigns":
+			out.Values[i] = ec._Mutation_tenantSigns(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ownerSigns":
+			out.Values[i] = ec._Mutation_ownerSigns(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3703,6 +4109,31 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 				}
 				return res
 			})
+		case "tenantSignature":
+			out.Values[i] = ec._Offer_tenantSignature(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "ownerSignature":
+			out.Values[i] = ec._Offer_ownerSignature(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "rejected":
+			out.Values[i] = ec._Offer_rejected(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "accepted":
+			out.Values[i] = ec._Offer_accepted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "signed":
+			out.Values[i] = ec._Offer_signed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4303,6 +4734,11 @@ func (ec *executionContext) unmarshalNOfferInput2githubᚗcomᚋ3dw1nM0535ᚋgal
 
 func (ec *executionContext) unmarshalNRegisterUser2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐRegisterUser(ctx context.Context, v interface{}) (model.RegisterUser, error) {
 	res, err := ec.unmarshalInputRegisterUser(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSigningInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐSigningInput(ctx context.Context, v interface{}) (model.SigningInput, error) {
+	res, err := ec.unmarshalInputSigningInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

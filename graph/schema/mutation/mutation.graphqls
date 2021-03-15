@@ -4,4 +4,6 @@ type Mutation {
   addUser(input: RegisterUser!): User!
   createOffer(input: OfferInput!): Offer!
   changeState(input: StateInput!): Land!
+  tenantSigns(input: SigningInput!): Offer!
+  ownerSigns(input: SigningInput!): Offer!
 }

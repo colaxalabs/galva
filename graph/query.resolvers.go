@@ -14,20 +14,20 @@ import (
 
 func (r *queryResolver) Lands(ctx context.Context) ([]*models.Land, error) {
 	lands := []*models.Land{}
-	r.ORM.Store.Find(&lands)
+	r.ORM.Store.Preload("LandOffers").Find(&lands)
 	return lands, nil
 }
 
 func (r *queryResolver) NearByPostal(ctx context.Context, postal string) ([]*models.Land, error) {
 	lands := []*models.Land{}
-	r.ORM.Store.Where("postal_code = ? AND state = ?", postal, "Leasing").Preload("User").Find(&lands)
+	r.ORM.Store.Where("postal_code = ? AND state = ?", postal, "Leasing").Find(&lands)
 	return lands, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, address string) (*models.User, error) {
 	user := &models.User{}
 	parsedAddress := utils.ParseAddress(address)
-	r.ORM.Store.Where("address = ?", parsedAddress).Preload("Properties").Find(&user)
+	r.ORM.Store.Where("address = ?", parsedAddress).Preload("Properties").Preload("UserOffers").Find(&user)
 	if user.ID == nil {
 		return nil, fmt.Errorf("account %s cannot be found", parsedAddress)
 	}
@@ -36,7 +36,7 @@ func (r *queryResolver) User(ctx context.Context, address string) (*models.User,
 
 func (r *queryResolver) Land(ctx context.Context, id int) (*models.Land, error) {
 	land := &models.Land{}
-	r.ORM.Store.Where("id = ?", id).Find(&land)
+	r.ORM.Store.Preload("LandOffers").Where("id = ?", id).Find(&land)
 	if land.ID != id {
 		return nil, fmt.Errorf("unable to find property %v", id)
 	}

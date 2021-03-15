@@ -28,6 +28,12 @@ type RegisterUser struct {
 	Signature string `json:"signature"`
 }
 
+type SigningInput struct {
+	ID        string `json:"id"`
+	Signer    string `json:"signer"`
+	Signature string `json:"signature"`
+}
+
 type StateInput struct {
 	ID    int    `json:"id"`
 	State string `json:"state"`

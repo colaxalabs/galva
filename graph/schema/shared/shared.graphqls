@@ -37,5 +37,10 @@ type Offer {
   fullFilled: Boolean!
   offerOwner: User!
   land: Land!
+  tenantSignature: String!
+  ownerSignature: String!
+  rejected: Boolean!
+  accepted: Boolean!
+  signed: Boolean!
 }
 

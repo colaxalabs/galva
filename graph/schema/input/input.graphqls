@@ -30,3 +30,9 @@ input StateInput {
   state: String!
 }
 
+input SigningInput {
+  id: ID!
+  signer: String!
+  signature: String!
+}
+

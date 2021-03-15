@@ -18,13 +18,6 @@ func (r *landResolver) LandOwner(ctx context.Context, obj *models.Land) (*models
 	return user, nil
 }
 
-func (r *landResolver) LandOffers(ctx context.Context, obj *models.Land) ([]*models.Offer, error) {
-	offers := []*models.Offer{}
-	id := obj.ID
-	r.ORM.Store.Where("land_id = ?", id).Find(&offers)
-	return offers, nil
-}
-
 func (r *offerResolver) ID(ctx context.Context, obj *models.Offer) (string, error) {
 	id := obj.ID.String()
 	return id, nil
