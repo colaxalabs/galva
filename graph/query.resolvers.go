@@ -14,7 +14,7 @@ import (
 
 func (r *queryResolver) Lands(ctx context.Context) ([]*models.Land, error) {
 	lands := []*models.Land{}
-	r.ORM.Store.Preload("User").Find(&lands)
+	r.ORM.Store.Find(&lands)
 	return lands, nil
 }
 
@@ -32,6 +32,15 @@ func (r *queryResolver) User(ctx context.Context, address string) (*models.User,
 		return nil, fmt.Errorf("account %s cannot be found", parsedAddress)
 	}
 	return user, nil
+}
+
+func (r *queryResolver) Land(ctx context.Context, id int) (*models.Land, error) {
+	land := &models.Land{}
+	r.ORM.Store.Where("id = ?", id).Find(&land)
+	if land.ID != id {
+		return nil, fmt.Errorf("unable to find property %v", id)
+	}
+	return land, nil
 }
 
 // Query returns generated.QueryResolver implementation.

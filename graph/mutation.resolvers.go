@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateLand(ctx context.Context, input model.NewLand) 
 		State:         input.State,
 		Location:      input.Location,
 		UserAddress:   utils.ParseAddress(input.Address),
-		User:          targetUser,
+		LandOwner:     targetUser,
 	}
 	r.ORM.Store.Save(&newLand)
 	return newLand, nil
@@ -56,6 +56,63 @@ func (r *mutationResolver) AddUser(ctx context.Context, input model.RegisterUser
 	}
 	r.ORM.Store.Save(&newUser)
 	return newUser, nil
+}
+
+func (r *mutationResolver) CreateOffer(ctx context.Context, input model.OfferInput) (*models.Offer, error) {
+	parsedTenant := utils.ParseAddress(input.Tenant)
+	parsedOwner := utils.ParseAddress(input.Owner)
+	// Check if user is authenticated
+	user := &models.User{}
+	r.ORM.Store.Where("address = ?", parsedOwner).Find(&user)
+	if user.ID == nil {
+		return nil, fmt.Errorf("user %v is not authenticated", parsedOwner)
+	}
+	tenant := &models.User{}
+	r.ORM.Store.Where("address = ?", parsedTenant).Find(&tenant)
+	if tenant.ID == nil {
+		return nil, fmt.Errorf("user %v is not authenticated", parsedTenant)
+	}
+	// Ensure property owner does not make offer to him/herself
+	// Check if property exists
+	land := &models.Land{}
+	r.ORM.Store.Where("id = ?", input.TokenID).Find(&land)
+	if land.ID == 0 {
+		return nil, fmt.Errorf("unable to find property with id %v", input.TokenID)
+	}
+	if land.UserAddress == parsedTenant {
+		return nil, fmt.Errorf("forbidden to make offer to property %v", input.TokenID)
+	}
+	if land.State != "Leasing" {
+		return nil, fmt.Errorf("property %v is not leasing", input.TokenID)
+	}
+	// Proceed to creating offer
+	id := models.NewID()
+	formattedTime, _ := utils.ParseTime(int64(input.Duration))
+	newOffer := &models.Offer{
+		ID:         id,
+		LandID:     land.ID,
+		Purpose:    input.Purpose,
+		Size:       input.Size,
+		Duration:   formattedTime,
+		Cost:       input.Cost,
+		Owner:      parsedOwner,
+		Tenant:     parsedTenant,
+		Title:      input.Title,
+		FullFilled: false,
+	}
+	r.ORM.Store.Save(&newOffer)
+	return newOffer, nil
+}
+
+func (r *mutationResolver) ChangeState(ctx context.Context, input model.StateInput) (*models.Land, error) {
+	land := &models.Land{}
+	r.ORM.Store.Where("id = ?", input.ID).Find(&land)
+	if land == nil {
+		return nil, fmt.Errorf("unable to find property %v", input.ID)
+	}
+	land.State = input.State
+	r.ORM.Store.Save(&land)
+	return land, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

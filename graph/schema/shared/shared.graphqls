@@ -10,7 +10,8 @@ type Land {
   createdAt: Time!
   updatedAt: Time!
   userAddress: String!
-  user: User!
+  landOwner: User!
+  landOffers: [Offer!]!
 }
 
 type User {
@@ -20,5 +21,21 @@ type User {
   createdAt: Time!
   updatedAt: Time!
   properties: [Land!]!
+  userOffers: [Offer!]!
+}
+
+type Offer {
+  id: ID!
+  landId: Int!
+  purpose: String!
+  size: String!
+  duration: Time!
+  cost: String!
+  owner: String!
+  tenant: String!
+  title: String!
+  fullFilled: Boolean!
+  offerOwner: User!
+  land: Land!
 }
 

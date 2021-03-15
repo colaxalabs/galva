@@ -13,3 +13,20 @@ input RegisterUser {
   signature: String!
 }
 
+input OfferInput {
+  tokenId: Int!
+  purpose: String!
+  size: String!
+  duration: Int!
+  cost: String!
+  owner: String!
+  tenant: String!
+  title: String!
+  fullFilled: Boolean!
+}
+
+input StateInput {
+  id: Int!
+  state: String!
+}
+

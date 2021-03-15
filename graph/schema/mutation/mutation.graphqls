@@ -2,4 +2,6 @@
 type Mutation {
   createLand(input: NewLand!): Land!
   addUser(input: RegisterUser!): User!
+  createOffer(input: OfferInput!): Offer!
+  changeState(input: StateInput!): Land!
 }
