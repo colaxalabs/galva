@@ -58,11 +58,23 @@ models:
     model:
       - github.com/3dw1nM0535/galva/store/models.Land
     fields:
-      user:
-        resolver: true # property owner(user) resolver will be generated
+      landOwner:
+        resolver: true # user who owns this land property
+      landOffers:
+        resolver: true # offers made to this land property
   User:
     model:
       - github.com/3dw1nM0535/galva/store/models.User
     fields:
       properties:
-        resolver: true # user properties resolver will be generated
+        resolver: true # properties owned by this user
+      userOffers:
+        resolver: true # offers made by this user
+  Offer:
+    model:
+      - github.com/3dw1nM0535/galva/store/models.Offer
+    fields:
+      land:
+        resolver: true # offer belongs to which property?
+      offerOwner:
+        resolver: true # offer belongs to which user?

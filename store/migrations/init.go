@@ -12,11 +12,13 @@ func migrate() error {
 	// Drop previously created table
 	orm.Store.DropTableIfExists(&models.Land{})
 	orm.Store.DropTableIfExists(&models.User{})
+	orm.Store.DropTableIfExists(&models.Offer{})
 
 	// Migrate data model and create tables based off the models
 	err = orm.Store.AutoMigrate(
 		&models.Land{},
 		&models.User{},
+		&models.Offer{},
 	).Error
 	if err != nil {
 		return err

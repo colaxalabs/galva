@@ -14,5 +14,6 @@ type Land struct {
 	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP;"`
 	UpdatedAt     time.Time
 	UserAddress   string
-	User          *User
+	LandOwner     *User
+	LandOffers    []*Offer
 }

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"time"
 )
 
 // IsQuoted returns true/false if input is quoted
@@ -22,4 +23,11 @@ func RemoveQuotes(input []byte) []byte {
 // ParseAddress returns Ethereum address as string
 func ParseAddress(input string) string {
 	return common.HexToAddress(input).String()
+}
+
+// Format Unix time to time.RFC3339
+func ParseTime(unixTime int64) (time.Time, error) {
+	unixFormat := time.Unix(unixTime, 0).Format(time.RFC3339)
+	newTime, _ := time.Parse(time.RFC3339, unixFormat)
+	return newTime, nil
 }

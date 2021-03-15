@@ -11,4 +11,5 @@ type User struct {
 	CreatedAt  time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt  time.Time
 	Properties []*Land
+	UserOffers []*Offer
 }
