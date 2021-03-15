@@ -42,11 +42,18 @@ func (r *mutationResolver) CreateLand(ctx context.Context, input model.NewLand) 
 }
 
 func (r *mutationResolver) AddUser(ctx context.Context, input model.RegisterUser) (*models.User, error) {
+	// Check duplicate user account
 	user := &models.User{}
 	parsedAddress := utils.ParseAddress(input.Address)
 	r.ORM.Store.Where("address = ?", parsedAddress).Find(&user)
 	if user.ID != nil {
 		return nil, fmt.Errorf("duplicate user account: %s", parsedAddress)
+	}
+	// Check non-duplicate account signature
+	signedAccount := &models.User{}
+	r.ORM.Store.Where("signature = ?", input.Signature).Find(&signedAccount)
+	if signedAccount.Signature == input.Signature {
+		return nil, fmt.Errorf("cannot authenticate user %v with duplicate signature for user id %v", parsedAddress, signedAccount.Address)
 	}
 	id := models.NewID()
 	newUser := &models.User{
