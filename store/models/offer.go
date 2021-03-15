@@ -22,4 +22,5 @@ type Offer struct {
 	Rejected        bool `gorm:"type:bool;default:false"`
 	Accepted        bool `gorm:"type:bool;default:false"`
 	Signed          bool `gorm:"default:false"`
+	Drafted         bool `gorm:"type:bool;default:false"`
 }

@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/3dw1nM0535/galva/graph/generated"
@@ -141,12 +142,15 @@ func (r *mutationResolver) TenantSigns(ctx context.Context, input model.SigningI
 		return nil, fmt.Errorf("unable to find offer with id %v for signing", input.ID)
 	}
 	// Tenant cannot sign rejected offer
-	if !offer.Rejected {
+	if offer.Rejected {
 		return nil, fmt.Errorf("forbidden to sign rejected offer %v", input.ID)
+	}
+	if !offer.Accepted {
+		return nil, errors.New("offer not accepted by property owner")
 	}
 	// Only offer creator can sign the offer
 	if offer.Tenant != parsedSigner {
-		return nil, fmt.Errorf("forbidden to sign offer created by %v", parsedSigner)
+		return nil, fmt.Errorf("forbidden to sign offer created by %v", offer.Tenant)
 	}
 	offer.TenantSignature = input.Signature
 	r.ORM.Store.Save(&offer)
@@ -171,6 +175,13 @@ func (r *mutationResolver) OwnerSigns(ctx context.Context, input model.SigningIn
 	if offer.ID == nil {
 		return nil, fmt.Errorf("unable to find offer with id %v for signing", input.ID)
 	}
+	// Owner cannot sign !accepted offer
+	if !offer.Accepted {
+		return nil, errors.New("accept offer first and tenant signature for you to sign last")
+	}
+	if offer.Rejected {
+		return nil, errors.New("cannot sign rejected offer")
+	}
 	// Owner cannot sign before tenant signs
 	if offer.Owner == parsedSigner && offer.TenantSignature == "" {
 		return nil, fmt.Errorf("forbidden to sign offer %v before tenant", input.ID)
@@ -180,6 +191,72 @@ func (r *mutationResolver) OwnerSigns(ctx context.Context, input model.SigningIn
 		return nil, fmt.Errorf("forbidden to sign offer where signer is not %v", offer.Owner)
 	}
 	offer.OwnerSignature = input.Signature
+	offer.Signed = true
+	r.ORM.Store.Save(&offer)
+	return offer, nil
+}
+
+func (r *mutationResolver) RejectOffer(ctx context.Context, input model.OfferStateInput) (*models.Offer, error) {
+	// Find offer
+	offer := &models.Offer{}
+	r.ORM.Store.Where("id = ?", input.ID).First(&offer)
+	if offer.ID == nil {
+		return nil, fmt.Errorf("unable to find offer %v", input.ID)
+	}
+	// Restrict rejecting already signed offer
+	if offer.Signed || offer.TenantSignature != "" {
+		return nil, errors.New("forbidden to reject signed offer")
+	}
+	// Restrict rejecting offer to property owner
+	if offer.Owner != input.Creator {
+		return nil, fmt.Errorf("forbidden to reject offer for user %v", offer.Owner)
+	}
+	if offer.Accepted {
+		return nil, errors.New("forbidden to reject accepted offer")
+	}
+	offer.Rejected = true
+	r.ORM.Store.Save(&offer)
+	return offer, nil
+}
+
+func (r *mutationResolver) AcceptOffer(ctx context.Context, input model.OfferStateInput) (*models.Offer, error) {
+	// Find offer
+	offer := &models.Offer{}
+	r.ORM.Store.Where("id = ?", input.ID).First(&offer)
+	if offer.ID == nil {
+		return nil, fmt.Errorf("unable to find offer %v", input.ID)
+	}
+	// Restrict accepting offer to property owner
+	if offer.Owner != input.Creator {
+		return nil, fmt.Errorf("forbidden to accept offer for user %v", offer.Owner)
+	}
+	// Restrict rejecting already signed offer
+	if offer.Signed || offer.TenantSignature != "" {
+		return nil, errors.New("forbidden to reject signed offer")
+	}
+	// Restrict accepting !rejected offers
+	if offer.Rejected {
+		return nil, errors.New("forbidden to accept rejected offer")
+	}
+	offer.Accepted = true
+	r.ORM.Store.Save(&offer)
+	return offer, nil
+}
+
+func (r *mutationResolver) DraftOffer(ctx context.Context, id string) (*models.Offer, error) {
+	// Find offer
+	offer := &models.Offer{}
+	r.ORM.Store.Where("id = ?", id).First(&offer)
+	if offer.ID == nil {
+		return nil, fmt.Errorf("unable to find offer %v", id)
+	}
+	if !offer.Signed {
+		return nil, errors.New("forbidden to draft unsigned offer")
+	}
+	if offer.Drafted {
+		return nil, errors.New("cannot draft an already drafted offer")
+	}
+	offer.Drafted = true
 	r.ORM.Store.Save(&offer)
 	return offer, nil
 }

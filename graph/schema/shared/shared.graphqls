@@ -42,5 +42,6 @@ type Offer {
   rejected: Boolean!
   accepted: Boolean!
   signed: Boolean!
+  drafted: Boolean!
 }
 

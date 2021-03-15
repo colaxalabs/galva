@@ -62,17 +62,21 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		AcceptOffer func(childComplexity int, input model.OfferStateInput) int
 		AddUser     func(childComplexity int, input model.RegisterUser) int
 		ChangeState func(childComplexity int, input model.StateInput) int
 		CreateLand  func(childComplexity int, input model.NewLand) int
 		CreateOffer func(childComplexity int, input model.OfferInput) int
+		DraftOffer  func(childComplexity int, id string) int
 		OwnerSigns  func(childComplexity int, input model.SigningInput) int
+		RejectOffer func(childComplexity int, input model.OfferStateInput) int
 		TenantSigns func(childComplexity int, input model.SigningInput) int
 	}
 
 	Offer struct {
 		Accepted        func(childComplexity int) int
 		Cost            func(childComplexity int) int
+		Drafted         func(childComplexity int) int
 		Duration        func(childComplexity int) int
 		FullFilled      func(childComplexity int) int
 		ID              func(childComplexity int) int
@@ -118,6 +122,9 @@ type MutationResolver interface {
 	ChangeState(ctx context.Context, input model.StateInput) (*models.Land, error)
 	TenantSigns(ctx context.Context, input model.SigningInput) (*models.Offer, error)
 	OwnerSigns(ctx context.Context, input model.SigningInput) (*models.Offer, error)
+	RejectOffer(ctx context.Context, input model.OfferStateInput) (*models.Offer, error)
+	AcceptOffer(ctx context.Context, input model.OfferStateInput) (*models.Offer, error)
+	DraftOffer(ctx context.Context, id string) (*models.Offer, error)
 }
 type OfferResolver interface {
 	ID(ctx context.Context, obj *models.Offer) (string, error)
@@ -223,6 +230,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Land.UserAddress(childComplexity), true
 
+	case "Mutation.acceptOffer":
+		if e.complexity.Mutation.AcceptOffer == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_acceptOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AcceptOffer(childComplexity, args["input"].(model.OfferStateInput)), true
+
 	case "Mutation.addUser":
 		if e.complexity.Mutation.AddUser == nil {
 			break
@@ -271,6 +290,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateOffer(childComplexity, args["input"].(model.OfferInput)), true
 
+	case "Mutation.draftOffer":
+		if e.complexity.Mutation.DraftOffer == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_draftOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DraftOffer(childComplexity, args["id"].(string)), true
+
 	case "Mutation.ownerSigns":
 		if e.complexity.Mutation.OwnerSigns == nil {
 			break
@@ -282,6 +313,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OwnerSigns(childComplexity, args["input"].(model.SigningInput)), true
+
+	case "Mutation.rejectOffer":
+		if e.complexity.Mutation.RejectOffer == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_rejectOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RejectOffer(childComplexity, args["input"].(model.OfferStateInput)), true
 
 	case "Mutation.tenantSigns":
 		if e.complexity.Mutation.TenantSigns == nil {
@@ -308,6 +351,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offer.Cost(childComplexity), true
+
+	case "Offer.drafted":
+		if e.complexity.Offer.Drafted == nil {
+			break
+		}
+
+		return e.complexity.Offer.Drafted(childComplexity), true
 
 	case "Offer.duration":
 		if e.complexity.Offer.Duration == nil {
@@ -608,6 +658,11 @@ input SigningInput {
   signature: String!
 }
 
+input OfferStateInput {
+  id: ID!
+  creator: String!
+}
+
 `, BuiltIn: false},
 	{Name: "graph/schema/mutation/mutation.graphqls", Input: `# GraphQL schema
 type Mutation {
@@ -617,6 +672,9 @@ type Mutation {
   changeState(input: StateInput!): Land!
   tenantSigns(input: SigningInput!): Offer!
   ownerSigns(input: SigningInput!): Offer!
+  rejectOffer(input: OfferStateInput!): Offer!
+  acceptOffer(input: OfferStateInput!): Offer!
+  draftOffer(id: ID!): Offer!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema/query/query.graphqls", Input: `# GraphQL schema
@@ -671,6 +729,7 @@ type Offer {
   rejected: Boolean!
   accepted: Boolean!
   signed: Boolean!
+  drafted: Boolean!
 }
 
 `, BuiltIn: false},
@@ -680,6 +739,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_acceptOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OfferStateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOfferStateInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐOfferStateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_addUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -741,6 +815,21 @@ func (ec *executionContext) field_Mutation_createOffer_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_draftOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_ownerSigns_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -748,6 +837,21 @@ func (ec *executionContext) field_Mutation_ownerSigns_args(ctx context.Context, 
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNSigningInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐSigningInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_rejectOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OfferStateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOfferStateInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐOfferStateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1471,6 +1575,132 @@ func (ec *executionContext) _Mutation_ownerSigns(ctx context.Context, field grap
 	return ec.marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_rejectOffer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_rejectOffer_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RejectOffer(rctx, args["input"].(model.OfferStateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Offer)
+	fc.Result = res
+	return ec.marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_acceptOffer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_acceptOffer_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AcceptOffer(rctx, args["input"].(model.OfferStateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Offer)
+	fc.Result = res
+	return ec.marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_draftOffer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_draftOffer_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DraftOffer(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Offer)
+	fc.Result = res
+	return ec.marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Offer_id(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2050,6 +2280,41 @@ func (ec *executionContext) _Offer_signed(ctx context.Context, field graphql.Col
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Signed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Offer_drafted(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Offer",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Drafted, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3774,6 +4039,34 @@ func (ec *executionContext) unmarshalInputOfferInput(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOfferStateInput(ctx context.Context, obj interface{}) (model.OfferStateInput, error) {
+	var it model.OfferStateInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "creator":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("creator"))
+			it.Creator, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRegisterUser(ctx context.Context, obj interface{}) (model.RegisterUser, error) {
 	var it model.RegisterUser
 	var asMap = obj.(map[string]interface{})
@@ -4000,6 +4293,21 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "rejectOffer":
+			out.Values[i] = ec._Mutation_rejectOffer(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "acceptOffer":
+			out.Values[i] = ec._Mutation_acceptOffer(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "draftOffer":
+			out.Values[i] = ec._Mutation_draftOffer(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4131,6 +4439,11 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "signed":
 			out.Values[i] = ec._Offer_signed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "drafted":
+			out.Values[i] = ec._Offer_drafted(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -4729,6 +5042,11 @@ func (ec *executionContext) marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalva�
 
 func (ec *executionContext) unmarshalNOfferInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐOfferInput(ctx context.Context, v interface{}) (model.OfferInput, error) {
 	res, err := ec.unmarshalInputOfferInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNOfferStateInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐOfferStateInput(ctx context.Context, v interface{}) (model.OfferStateInput, error) {
+	res, err := ec.unmarshalInputOfferStateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

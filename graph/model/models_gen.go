@@ -23,6 +23,11 @@ type OfferInput struct {
 	FullFilled bool   `json:"fullFilled"`
 }
 
+type OfferStateInput struct {
+	ID      string `json:"id"`
+	Creator string `json:"creator"`
+}
+
 type RegisterUser struct {
 	Address   string `json:"address"`
 	Signature string `json:"signature"`

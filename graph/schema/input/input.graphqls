@@ -36,3 +36,8 @@ input SigningInput {
   signature: String!
 }
 
+input OfferStateInput {
+  id: ID!
+  creator: String!
+}
+
