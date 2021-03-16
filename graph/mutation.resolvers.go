@@ -250,9 +250,11 @@ func (r *mutationResolver) DraftOffer(ctx context.Context, id string) (*models.O
 	if offer.ID == nil {
 		return nil, fmt.Errorf("unable to find offer %v", id)
 	}
+	// Restrict drafting not signed offer
 	if !offer.Signed {
 		return nil, errors.New("forbidden to draft unsigned offer")
 	}
+	// Restrict drafting an already drafted offer
 	if offer.Drafted {
 		return nil, errors.New("cannot draft an already drafted offer")
 	}
