@@ -1,43 +1,6 @@
 # GraphQL schema
-input NewLand {
-  tokenId: Int!
-  postalCode: String!
-  sateliteImage: String!
-  state: String!
-  address: String!
-  location: String!
-}
-
 input RegisterUser {
   address: String!
   signature: String!
-}
-
-input OfferInput {
-  tokenId: Int!
-  purpose: String!
-  size: String!
-  duration: Int!
-  cost: String!
-  owner: String!
-  tenant: String!
-  title: String!
-  fullFilled: Boolean!
-}
-
-input StateInput {
-  id: Int!
-  state: String!
-}
-
-input SigningInput {
-  id: ID!
-  signer: String!
-  signature: String!
-}
-
-input OfferStateInput {
-  id: ID!
-  creator: String!
 }
 

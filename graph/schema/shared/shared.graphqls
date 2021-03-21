@@ -1,17 +1,16 @@
 # GraphQL schema
 scalar Time
 
-type Land {
+type Property {
   id: ID!
   postalCode: String!
   location: String!
-  state: String!
   sateliteImage: String!
   createdAt: Time!
   updatedAt: Time!
   userAddress: String!
-  landOwner: User!
-  landOffers: [Offer!]!
+  user: User!
+  offers: [Offer!]!
 }
 
 type User {
@@ -20,24 +19,24 @@ type User {
   signature: String!
   createdAt: Time!
   updatedAt: Time!
-  properties: [Land!]!
-  userOffers: [Offer!]!
+  offers: [Offer!]!
+  properties: [Property!]!
 }
 
 type Offer {
   id: ID!
-  landId: Int!
   purpose: String!
   size: String!
   duration: Time!
   cost: String!
   owner: String!
-  tenant: String!
+  user: User!
+  userAddress: String!
   title: String!
   fullFilled: Boolean!
-  offerOwner: User!
-  land: Land!
-  tenantSignature: String!
+  property: Property!
+  propertyId: ID!
+  userSignature: String!
   ownerSignature: String!
   rejected: Boolean!
   accepted: Boolean!

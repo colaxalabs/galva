@@ -5,42 +5,12 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/3dw1nM0535/galva/graph/generated"
-	"github.com/3dw1nM0535/galva/store/models"
-	"github.com/3dw1nM0535/galva/utils"
 )
 
-func (r *queryResolver) Lands(ctx context.Context) ([]*models.Land, error) {
-	lands := []*models.Land{}
-	r.ORM.Store.Preload("LandOffers").Find(&lands)
-	return lands, nil
-}
-
-func (r *queryResolver) NearByPostal(ctx context.Context, postal string) ([]*models.Land, error) {
-	lands := []*models.Land{}
-	r.ORM.Store.Where("postal_code = ? AND state = ?", postal, "Leasing").Find(&lands)
-	return lands, nil
-}
-
-func (r *queryResolver) User(ctx context.Context, address string) (*models.User, error) {
-	user := &models.User{}
-	parsedAddress := utils.ParseAddress(address)
-	r.ORM.Store.Where("address = ?", parsedAddress).Preload("Properties").Preload("UserOffers").Find(&user)
-	if user.ID == nil {
-		return nil, fmt.Errorf("account %s cannot be found", parsedAddress)
-	}
-	return user, nil
-}
-
-func (r *queryResolver) Land(ctx context.Context, id int) (*models.Land, error) {
-	land := &models.Land{}
-	r.ORM.Store.Preload("LandOffers").Where("id = ?", id).Find(&land)
-	if land.ID != id {
-		return nil, fmt.Errorf("unable to find property %v", id)
-	}
-	return land, nil
+func (r *queryResolver) Hello(ctx context.Context) (string, error) {
+	return "Hello", nil
 }
 
 // Query returns generated.QueryResolver implementation.

@@ -1,12 +1,4 @@
 # GraphQL schema
 type Mutation {
-  createLand(input: NewLand!): Land!
   addUser(input: RegisterUser!): User!
-  createOffer(input: OfferInput!): Offer!
-  changeState(input: StateInput!): Land!
-  tenantSigns(input: SigningInput!): Offer!
-  ownerSigns(input: SigningInput!): Offer!
-  rejectOffer(input: OfferStateInput!): Offer!
-  acceptOffer(input: OfferStateInput!): Offer!
-  draftOffer(id: ID!): Offer!
 }

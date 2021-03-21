@@ -54,25 +54,21 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-  Land:
+  Property:
     model:
-      - github.com/3dw1nM0535/galva/store/models.Land
+      - github.com/3dw1nM0535/galva/store/models.Property
     fields:
-      landOwner:
+      user:
         resolver: true # user who owns this land property
   User:
     model:
       - github.com/3dw1nM0535/galva/store/models.User
     fields:
-      properties:
-        resolver: true # properties owned by this user
-      userOffers:
-        resolver: true # offers made by this user
   Offer:
     model:
       - github.com/3dw1nM0535/galva/store/models.Offer
     fields:
-      land:
+      property:
         resolver: true # offer belongs to which property?
-      offerOwner:
+      user:
         resolver: true # offer belongs to which user?

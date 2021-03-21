@@ -1,7 +1,4 @@
 # GraphQL schema
 type Query {
-  lands: [Land!]!
-  nearByPostal(postal: String!): [Land!]!
-  user(address: String!): User!
-  land(id: Int!): Land!
+  hello: String!
 }
