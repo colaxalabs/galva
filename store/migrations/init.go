@@ -10,13 +10,13 @@ func migrate() error {
 	defer orm.Store.Close()
 
 	// Drop previously created table
-	orm.Store.DropTableIfExists(&models.Land{})
+	orm.Store.DropTableIfExists(&models.Property{})
 	orm.Store.DropTableIfExists(&models.User{})
 	orm.Store.DropTableIfExists(&models.Offer{})
 
 	// Migrate data model and create tables based off the models
 	err = orm.Store.AutoMigrate(
-		&models.Land{},
+		&models.Property{},
 		&models.User{},
 		&models.Offer{},
 	).Error
