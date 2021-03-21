@@ -26,22 +26,29 @@ func TestGalva(t *testing.T) {
 
 	t.Run("sign up user", func(t *testing.T) {
 		var resp struct {
-			AddUser struct{ Address string }
+			AddUser struct {
+				Address   string
+				Signature string
+			}
 		}
 
 		c.MustPost(
-			`mutation($address: String!, $signature: String!) { addUser(input: {address: $address, signature: $signature}) { address } }`,
+			`mutation($address: String!, $signature: String!) { addUser(input: {address: $address, signature: $signature}) { address signature } }`,
 			&resp,
 			client.Var("address", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
 			client.Var("signature", "unique signature"),
 		)
 
 		require.Equal(t, "0x40D054170DB5417369D170D1343063EeE55fb0cC", resp.AddUser.Address)
+		require.Equal(t, "unique signature", resp.AddUser.Signature)
 	})
 
 	t.Run("should panic for duplicate user sign up", func(t *testing.T) {
 		var resp struct {
-			AddUser struct{ Address string }
+			AddUser struct {
+				Address   string
+				Signature string
+			}
 		}
 
 		err := c.Post(
