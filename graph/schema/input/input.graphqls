@@ -4,3 +4,10 @@ input RegisterUser {
   signature: String!
 }
 
+input PropertyInput {
+  id: ID!
+  postalCode: String!
+  location: String!
+  sateliteImage: String!
+  userAddress: String!
+}

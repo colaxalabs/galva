@@ -2,6 +2,14 @@
 
 package model
 
+type PropertyInput struct {
+	ID            string `json:"id"`
+	PostalCode    string `json:"postalCode"`
+	Location      string `json:"location"`
+	SateliteImage string `json:"sateliteImage"`
+	UserAddress   string `json:"userAddress"`
+}
+
 type RegisterUser struct {
 	Address   string `json:"address"`
 	Signature string `json:"signature"`

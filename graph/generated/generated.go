@@ -49,7 +49,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		AddUser func(childComplexity int, input model.RegisterUser) int
+		AddListing func(childComplexity int, input model.PropertyInput) int
+		AddUser    func(childComplexity int, input model.RegisterUser) int
 	}
 
 	Offer struct {
@@ -102,6 +103,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	AddUser(ctx context.Context, input model.RegisterUser) (*models.User, error)
+	AddListing(ctx context.Context, input model.PropertyInput) (*models.Property, error)
 }
 type OfferResolver interface {
 	ID(ctx context.Context, obj *models.Offer) (string, error)
@@ -134,6 +136,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Mutation.addListing":
+		if e.complexity.Mutation.AddListing == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addListing_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddListing(childComplexity, args["input"].(model.PropertyInput)), true
 
 	case "Mutation.addUser":
 		if e.complexity.Mutation.AddUser == nil {
@@ -462,10 +476,18 @@ input RegisterUser {
   signature: String!
 }
 
+input PropertyInput {
+  id: ID!
+  postalCode: String!
+  location: String!
+  sateliteImage: String!
+  userAddress: String!
+}
 `, BuiltIn: false},
 	{Name: "graph/schema/mutation/mutation.graphqls", Input: `# GraphQL schema
 type Mutation {
   addUser(input: RegisterUser!): User!
+  addListing(input: PropertyInput!): Property!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema/query/query.graphqls", Input: `# GraphQL schema
@@ -526,6 +548,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_addListing_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.PropertyInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNPropertyInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐPropertyInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_addUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -635,6 +672,48 @@ func (ec *executionContext) _Mutation_addUser(ctx context.Context, field graphql
 	res := resTmp.(*models.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_addListing(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addListing_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddListing(rctx, args["input"].(model.PropertyInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Property)
+	fc.Result = res
+	return ec.marshalNProperty2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Offer_id(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
@@ -3020,6 +3099,58 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputPropertyInput(ctx context.Context, obj interface{}) (model.PropertyInput, error) {
+	var it model.PropertyInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "postalCode":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
+			it.PostalCode, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "location":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("location"))
+			it.Location, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "sateliteImage":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sateliteImage"))
+			it.SateliteImage, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userAddress":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAddress"))
+			it.UserAddress, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRegisterUser(ctx context.Context, obj interface{}) (model.RegisterUser, error) {
 	var it model.RegisterUser
 	var asMap = obj.(map[string]interface{})
@@ -3073,6 +3204,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "addUser":
 			out.Values[i] = ec._Mutation_addUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addListing":
+			out.Values[i] = ec._Mutation_addListing(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3798,6 +3934,11 @@ func (ec *executionContext) marshalNProperty2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalv
 		return graphql.Null
 	}
 	return ec._Property(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPropertyInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐPropertyInput(ctx context.Context, v interface{}) (model.PropertyInput, error) {
+	res, err := ec.unmarshalInputPropertyInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNRegisterUser2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐRegisterUser(ctx context.Context, v interface{}) (model.RegisterUser, error) {
