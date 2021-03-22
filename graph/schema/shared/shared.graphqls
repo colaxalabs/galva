@@ -38,7 +38,7 @@ type Offer {
   propertyId: ID!
   userSignature: String!
   ownerSignature: String!
-  rejected: Boolean!
+  expiresIn: Time!
   accepted: Boolean!
   signed: Boolean!
   drafted: Boolean!

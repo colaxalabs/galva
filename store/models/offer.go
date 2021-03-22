@@ -19,7 +19,7 @@ type Offer struct {
 	PropertyID     int `gorm:"type:integer;not_null"`
 	UserSignature  string
 	OwnerSignature string
-	Rejected       bool `gorm:"type:bool;default:false"`
+	ExpiresIn      time.Time
 	Accepted       bool `gorm:"type:bool;default:false"`
 	Signed         bool `gorm:"type:bool;default:false"`
 	Drafted        bool `gorm:"type:bool;default:false"`

@@ -11,13 +11,11 @@ import (
 	"github.com/3dw1nM0535/galva/utils"
 )
 
-// ID returns offer id
 func (r *offerResolver) ID(ctx context.Context, obj *models.Offer) (string, error) {
 	id := obj.ID.String()
 	return id, nil
 }
 
-// User returns user belonging to an offer
 func (r *offerResolver) User(ctx context.Context, obj *models.Offer) (*models.User, error) {
 	user := &models.User{}
 	userAddress := utils.ParseAddress(obj.UserAddress)
@@ -25,7 +23,6 @@ func (r *offerResolver) User(ctx context.Context, obj *models.Offer) (*models.Us
 	return user, nil
 }
 
-// Property returns property belonging to an offer
 func (r *offerResolver) Property(ctx context.Context, obj *models.Offer) (*models.Property, error) {
 	property := &models.Property{}
 	id := obj.PropertyID
@@ -33,7 +30,6 @@ func (r *offerResolver) Property(ctx context.Context, obj *models.Offer) (*model
 	return property, nil
 }
 
-// User returns user belonging to a property
 func (r *propertyResolver) User(ctx context.Context, obj *models.Property) (*models.User, error) {
 	user := &models.User{}
 	userAddress := utils.ParseAddress(obj.UserAddress)
@@ -41,7 +37,6 @@ func (r *propertyResolver) User(ctx context.Context, obj *models.Property) (*mod
 	return user, nil
 }
 
-// ID returns user id
 func (r *userResolver) ID(ctx context.Context, obj *models.User) (string, error) {
 	id := obj.ID.String()
 	return id, nil

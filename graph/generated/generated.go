@@ -57,6 +57,7 @@ type ComplexityRoot struct {
 		Cost           func(childComplexity int) int
 		Drafted        func(childComplexity int) int
 		Duration       func(childComplexity int) int
+		ExpiresIn      func(childComplexity int) int
 		FullFilled     func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Owner          func(childComplexity int) int
@@ -64,7 +65,6 @@ type ComplexityRoot struct {
 		Property       func(childComplexity int) int
 		PropertyID     func(childComplexity int) int
 		Purpose        func(childComplexity int) int
-		Rejected       func(childComplexity int) int
 		Signed         func(childComplexity int) int
 		Size           func(childComplexity int) int
 		Title          func(childComplexity int) int
@@ -175,6 +175,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Offer.Duration(childComplexity), true
 
+	case "Offer.expiresIn":
+		if e.complexity.Offer.ExpiresIn == nil {
+			break
+		}
+
+		return e.complexity.Offer.ExpiresIn(childComplexity), true
+
 	case "Offer.fullFilled":
 		if e.complexity.Offer.FullFilled == nil {
 			break
@@ -223,13 +230,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Offer.Purpose(childComplexity), true
-
-	case "Offer.rejected":
-		if e.complexity.Offer.Rejected == nil {
-			break
-		}
-
-		return e.complexity.Offer.Rejected(childComplexity), true
 
 	case "Offer.signed":
 		if e.complexity.Offer.Signed == nil {
@@ -513,7 +513,7 @@ type Offer {
   propertyId: ID!
   userSignature: String!
   ownerSignature: String!
-  rejected: Boolean!
+  expiresIn: Time!
   accepted: Boolean!
   signed: Boolean!
   drafted: Boolean!
@@ -1127,7 +1127,7 @@ func (ec *executionContext) _Offer_ownerSignature(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Offer_rejected(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
+func (ec *executionContext) _Offer_expiresIn(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1145,7 +1145,7 @@ func (ec *executionContext) _Offer_rejected(ctx context.Context, field graphql.C
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rejected, nil
+		return obj.ExpiresIn, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1157,9 +1157,9 @@ func (ec *executionContext) _Offer_rejected(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Offer_accepted(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
@@ -3195,8 +3195,8 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "rejected":
-			out.Values[i] = ec._Offer_rejected(ctx, field, obj)
+		case "expiresIn":
+			out.Values[i] = ec._Offer_expiresIn(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

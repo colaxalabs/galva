@@ -13,7 +13,6 @@ import (
 	"github.com/3dw1nM0535/galva/utils"
 )
 
-// AddUser creates new user and return created user
 func (r *mutationResolver) AddUser(ctx context.Context, input model.RegisterUser) (*models.User, error) {
 	// Check if user already exists
 	parsedAddress := utils.ParseAddress(input.Address)
