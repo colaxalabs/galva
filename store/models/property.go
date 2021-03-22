@@ -6,7 +6,7 @@ import (
 
 // Property represent land asset
 type Property struct {
-	ID            int       `gorm:"primary_key;not_null;"`
+	ID            int64     `gorm:"primary_key;not_null;"`
 	PostalCode    string    `gorm:"type:varchar(10);not_null;"`
 	SateliteImage string    `gorm:"type:varchar(100);not_null;"`
 	Location      string    `gorm:"type:varchar(100);not_null;"`
