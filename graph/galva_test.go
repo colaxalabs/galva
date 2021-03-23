@@ -60,6 +60,27 @@ func TestGalva(t *testing.T) {
 
 		require.EqualError(t, err, "[{\"message\":\"user already exists\",\"path\":[\"addUser\"]}]")
 	})
+
+	t.Run("should panic listing not tokenized property to market", func(t *testing.T) {
+		var resp struct {
+			AddListing struct {
+				ID         int64
+				PostalCode string
+			}
+		}
+
+		err := c.Post(
+			`mutation($id: ID!, $postalCode: String!, $location: String!, $sateliteImage: String!, $userAddress: String!) { addListing(input: {id: $id, postalCode: $postalCode, sateliteImage: $sateliteImage, location: $location, userAddress: $userAddress}) { id postalCode } }`,
+			&resp,
+			client.Var("id", 4325),
+			client.Var("postalCode", "50300"),
+			client.Var("location", "Mbale, Kenya"),
+			client.Var("sateliteImage", "image"),
+			client.Var("userAddress", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"Error 'VM execution error.' querying token owner\",\"path\":[\"addListing\"]}]")
+	})
 }
 
 func setUp(orm *store.ORM) *client.Client {
