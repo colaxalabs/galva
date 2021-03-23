@@ -123,6 +123,57 @@ func TestGalva(t *testing.T) {
 
 		require.EqualError(t, err, "[{\"message\":\"cannot find offer with id id\",\"path\":[\"acceptOffer\"]}]")
 	})
+
+	t.Run("should panic querying user profile for nonexistent user", func(t *testing.T) {
+		var resp struct {
+			GetUser struct {
+				Address   string
+				Signature string
+			}
+		}
+
+		c.MustPost(
+			`query($address: String!) { getUser(address: $address) { address signature } }`,
+			&resp,
+			client.Var("address", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
+		)
+
+		require.Equal(t, "unique signature", resp.GetUser.Signature)
+	})
+
+	t.Run("should panic querying user profile for nonexistent user", func(t *testing.T) {
+		var resp struct {
+			GetUser struct {
+				Address   string
+				Signature string
+			}
+		}
+
+		err := c.Post(
+			`query($address: String!) { getUser(address: $address) { address signature } }`,
+			&resp,
+			client.Var("address", "0x40D054170DB5417369D170D1343063EeE45fb0cC"),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"cannot find user\",\"path\":[\"getUser\"]}]")
+	})
+
+	t.Run("should panic querying info for nonlisted property", func(t *testing.T) {
+		var resp struct {
+			GetProperty struct {
+				PostalCode string
+				Location   string
+			}
+		}
+
+		err := c.Post(
+			`query($id: ID!) { getProperty(id: $id) { postalCode location } }`,
+			&resp,
+			client.Var("id", "id"),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"cannot find property\",\"path\":[\"getProperty\"]}]")
+	})
 }
 
 func setUp(orm *store.ORM) *client.Client {
