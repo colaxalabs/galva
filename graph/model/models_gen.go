@@ -2,6 +2,19 @@
 
 package model
 
+import (
+	"time"
+)
+
+type OfferInput struct {
+	Purpose     string    `json:"purpose"`
+	Size        string    `json:"size"`
+	Duration    time.Time `json:"duration"`
+	Cost        string    `json:"cost"`
+	PropertyID  int       `json:"propertyId"`
+	UserAddress string    `json:"userAddress"`
+}
+
 type PropertyInput struct {
 	ID            string `json:"id"`
 	PostalCode    string `json:"postalCode"`

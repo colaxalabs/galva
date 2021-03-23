@@ -2,4 +2,5 @@
 type Mutation {
   addUser(input: RegisterUser!): User!
   addListing(input: PropertyInput!): Property!
+  makeOffer(input: OfferInput!): Offer!
 }

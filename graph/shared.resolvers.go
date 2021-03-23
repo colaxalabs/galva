@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/3dw1nM0535/galva/graph/generated"
 	"github.com/3dw1nM0535/galva/store/models"
@@ -21,6 +22,10 @@ func (r *offerResolver) User(ctx context.Context, obj *models.Offer) (*models.Us
 	userAddress := utils.ParseAddress(obj.UserAddress)
 	r.ORM.Store.Where("address = ?", userAddress).Find(&user)
 	return user, nil
+}
+
+func (r *offerResolver) Title(ctx context.Context, obj *models.Offer) (string, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *offerResolver) Property(ctx context.Context, obj *models.Offer) (*models.Property, error) {

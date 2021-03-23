@@ -51,6 +51,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddListing func(childComplexity int, input model.PropertyInput) int
 		AddUser    func(childComplexity int, input model.RegisterUser) int
+		MakeOffer  func(childComplexity int, input model.OfferInput) int
 	}
 
 	Offer struct {
@@ -104,11 +105,14 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	AddUser(ctx context.Context, input model.RegisterUser) (*models.User, error)
 	AddListing(ctx context.Context, input model.PropertyInput) (*models.Property, error)
+	MakeOffer(ctx context.Context, input model.OfferInput) (*models.Offer, error)
 }
 type OfferResolver interface {
 	ID(ctx context.Context, obj *models.Offer) (string, error)
 
 	User(ctx context.Context, obj *models.Offer) (*models.User, error)
+
+	Title(ctx context.Context, obj *models.Offer) (string, error)
 
 	Property(ctx context.Context, obj *models.Offer) (*models.Property, error)
 }
@@ -160,6 +164,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddUser(childComplexity, args["input"].(model.RegisterUser)), true
+
+	case "Mutation.makeOffer":
+		if e.complexity.Mutation.MakeOffer == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_makeOffer_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MakeOffer(childComplexity, args["input"].(model.OfferInput)), true
 
 	case "Offer.accepted":
 		if e.complexity.Offer.Accepted == nil {
@@ -483,11 +499,21 @@ input PropertyInput {
   sateliteImage: String!
   userAddress: String!
 }
+
+input OfferInput {
+  purpose: String!
+  size: String!
+  duration: Time!
+  cost: String!
+  propertyId: Int!
+  userAddress: String!
+}
 `, BuiltIn: false},
 	{Name: "graph/schema/mutation/mutation.graphqls", Input: `# GraphQL schema
 type Mutation {
   addUser(input: RegisterUser!): User!
   addListing(input: PropertyInput!): Property!
+  makeOffer(input: OfferInput!): Offer!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema/query/query.graphqls", Input: `# GraphQL schema
@@ -571,6 +597,21 @@ func (ec *executionContext) field_Mutation_addUser_args(ctx context.Context, raw
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNRegisterUser2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐRegisterUser(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_makeOffer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OfferInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOfferInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐOfferInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -714,6 +755,48 @@ func (ec *executionContext) _Mutation_addListing(ctx context.Context, field grap
 	res := resTmp.(*models.Property)
 	fc.Result = res
 	return ec.marshalNProperty2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐProperty(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_makeOffer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_makeOffer_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MakeOffer(rctx, args["input"].(model.OfferInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Offer)
+	fc.Result = res
+	return ec.marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Offer_id(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
@@ -1007,14 +1090,14 @@ func (ec *executionContext) _Offer_title(ctx context.Context, field graphql.Coll
 		Object:     "Offer",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Title, nil
+		return ec.resolvers.Offer().Title(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1131,9 +1214,9 @@ func (ec *executionContext) _Offer_propertyId(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
+	return ec.marshalNID2int64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Offer_userSignature(ctx context.Context, field graphql.CollectedField, obj *models.Offer) (ret graphql.Marshaler) {
@@ -1376,9 +1459,9 @@ func (ec *executionContext) _Property_id(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
+	return ec.marshalNID2int64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Property_postalCode(ctx context.Context, field graphql.CollectedField, obj *models.Property) (ret graphql.Marshaler) {
@@ -3099,6 +3182,66 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputOfferInput(ctx context.Context, obj interface{}) (model.OfferInput, error) {
+	var it model.OfferInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "purpose":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("purpose"))
+			it.Purpose, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "size":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+			it.Size, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "duration":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("duration"))
+			it.Duration, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "cost":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cost"))
+			it.Cost, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "propertyId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("propertyId"))
+			it.PropertyID, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userAddress":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAddress"))
+			it.UserAddress, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPropertyInput(ctx context.Context, obj interface{}) (model.PropertyInput, error) {
 	var it model.PropertyInput
 	var asMap = obj.(map[string]interface{})
@@ -3212,6 +3355,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "makeOffer":
+			out.Values[i] = ec._Mutation_makeOffer(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3293,10 +3441,19 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "title":
-			out.Values[i] = ec._Offer_title(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Offer_title(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "fullFilled":
 			out.Values[i] = ec._Offer_fullFilled(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3808,13 +3965,13 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
+func (ec *executionContext) unmarshalNID2int64(ctx context.Context, v interface{}) (int64, error) {
+	res, err := graphql.UnmarshalInt64(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
+func (ec *executionContext) marshalNID2int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	res := graphql.MarshalInt64(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3836,6 +3993,25 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNOffer2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOffer(ctx context.Context, sel ast.SelectionSet, v models.Offer) graphql.Marshaler {
+	return ec._Offer(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNOffer2ᚕᚖgithubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐOfferᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Offer) graphql.Marshaler {
@@ -3883,6 +4059,11 @@ func (ec *executionContext) marshalNOffer2ᚖgithubᚗcomᚋ3dw1nM0535ᚋgalva�
 		return graphql.Null
 	}
 	return ec._Offer(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOfferInput2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋgraphᚋmodelᚐOfferInput(ctx context.Context, v interface{}) (model.OfferInput, error) {
+	res, err := ec.unmarshalInputOfferInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNProperty2githubᚗcomᚋ3dw1nM0535ᚋgalvaᚋstoreᚋmodelsᚐProperty(ctx context.Context, sel ast.SelectionSet, v models.Property) graphql.Marshaler {

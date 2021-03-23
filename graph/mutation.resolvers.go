@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"time"
 
 	"github.com/3dw1nM0535/galva/eth"
 	"github.com/3dw1nM0535/galva/graph/generated"
@@ -44,8 +45,8 @@ func (r *mutationResolver) AddListing(ctx context.Context, input model.PropertyI
 	if err != nil {
 		return nil, fmt.Errorf("Error '%v' while setting up ethereum node", err)
 	}
-	// Load contract to query nft
-	contractAddress := common.HexToAddress("0x5FbDB2315678afecb367f032d93F642f64180aa3")
+	// Load contract to query nft validity
+	contractAddress := common.HexToAddress(nftContractAddress)
 	instance, err := nft.NewNft(contractAddress, newEth.Client)
 	if err != nil {
 		return nil, fmt.Errorf("Error '%v' while setting up ethereum contract", err)
@@ -69,7 +70,57 @@ func (r *mutationResolver) AddListing(ctx context.Context, input model.PropertyI
 	return property, nil
 }
 
+func (r *mutationResolver) MakeOffer(ctx context.Context, input model.OfferInput) (*models.Offer, error) {
+	property := &models.Property{}
+	// Validate the property is tokenized
+	newEth, err := eth.NewEthClient()
+	if err != nil {
+		return nil, fmt.Errorf("Error '%v' while setting up ethereum node", err)
+	}
+	// Load contract to query nft validity
+	contractAddress := common.HexToAddress(nftContractAddress)
+	instance, err := nft.NewNft(contractAddress, newEth.Client)
+	if err != nil {
+		return nil, fmt.Errorf("Error '%v' while setting up ethereum contract", err)
+	}
+	// Check if property id is valid
+	propertyId := big.NewInt(int64(input.PropertyID))
+	owner, err := instance.OwnerOf(nil, propertyId)
+	if err != nil {
+		return nil, fmt.Errorf("Error '%v' querying token owner", err)
+	}
+	// Check if property is listed
+	r.ORM.Store.Where("id = ?", input.PropertyID).First(&property)
+	if property.ID == 0 {
+		return nil, fmt.Errorf("cannot find listing in market with id %v", input.PropertyID)
+	}
+	parsedOwner := owner.String()
+	// Create offer to property
+	id := models.NewID()
+	newOffer := &models.Offer{
+		ID:          id,
+		Purpose:     input.Purpose,
+		Size:        input.Size,
+		Duration:    input.Duration,
+		Cost:        input.Cost,
+		Owner:       parsedOwner,
+		UserAddress: input.UserAddress,
+		ExpiresIn:   time.Now().Add(time.Hour * 24 * 7),
+	}
+	return newOffer, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+const (
+	nftContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+)

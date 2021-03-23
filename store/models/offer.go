@@ -13,10 +13,9 @@ type Offer struct {
 	Owner          string    `gorm:"not_null"`
 	User           *User
 	UserAddress    string `gorm:"not_null"`
-	Title          string `gorm:"not_null"`
 	FullFilled     bool   `gorm:"default:false;not_null"`
 	Property       *Property
-	PropertyID     int `gorm:"type:integer;not_null"`
+	PropertyID     int64 `gorm:"type:integer;not_null"`
 	UserSignature  string
 	OwnerSignature string
 	ExpiresIn      time.Time

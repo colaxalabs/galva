@@ -11,3 +11,12 @@ input PropertyInput {
   sateliteImage: String!
   userAddress: String!
 }
+
+input OfferInput {
+  purpose: String!
+  size: String!
+  duration: Time!
+  cost: String!
+  propertyId: Int!
+  userAddress: String!
+}

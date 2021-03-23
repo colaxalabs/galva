@@ -32,7 +32,6 @@ type Offer {
   owner: String!
   user: User!
   userAddress: String!
-  title: String!
   fullFilled: Boolean!
   property: Property!
   propertyId: ID!
