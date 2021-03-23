@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type AcceptOfferInput struct {
+	ID          string `json:"id"`
+	UserAddress string `json:"userAddress"`
+}
+
 type OfferInput struct {
 	Purpose     string    `json:"purpose"`
 	Size        string    `json:"size"`

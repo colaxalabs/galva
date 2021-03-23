@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/3dw1nM0535/galva/constants"
 	"github.com/3dw1nM0535/galva/eth"
 	"github.com/3dw1nM0535/galva/graph/generated"
 	"github.com/3dw1nM0535/galva/graph/model"
@@ -46,7 +47,7 @@ func (r *mutationResolver) AddListing(ctx context.Context, input model.PropertyI
 		return nil, fmt.Errorf("Error '%v' while setting up ethereum node", err)
 	}
 	// Load contract to query nft validity
-	contractAddress := common.HexToAddress(nftContractAddress)
+	contractAddress := common.HexToAddress(constants.NftContractAddress)
 	instance, err := nft.NewNft(contractAddress, newEth.Client)
 	if err != nil {
 		return nil, fmt.Errorf("Error '%v' while setting up ethereum contract", err)
@@ -78,7 +79,7 @@ func (r *mutationResolver) MakeOffer(ctx context.Context, input model.OfferInput
 		return nil, fmt.Errorf("Error '%v' while setting up ethereum node", err)
 	}
 	// Load contract to query nft validity
-	contractAddress := common.HexToAddress(nftContractAddress)
+	contractAddress := common.HexToAddress(constants.NftContractAddress)
 	instance, err := nft.NewNft(contractAddress, newEth.Client)
 	if err != nil {
 		return nil, fmt.Errorf("Error '%v' while setting up ethereum contract", err)
@@ -110,17 +111,24 @@ func (r *mutationResolver) MakeOffer(ctx context.Context, input model.OfferInput
 	return newOffer, nil
 }
 
+func (r *mutationResolver) AcceptOffer(ctx context.Context, input model.AcceptOfferInput) (*models.Offer, error) {
+	// Check that the offer exists
+	offer := &models.Offer{}
+	r.ORM.Store.Where("id = ?", input.ID).First(&offer)
+	if offer.ID == nil {
+		return nil, fmt.Errorf("cannot find offer with id %v", input.ID)
+	}
+	// Validate that the offer owner is the requestor
+	if offer.Owner != utils.ParseAddress(input.UserAddress) {
+		return nil, errors.New(constants.ForbiddenToOwner)
+	}
+	// Update offer
+	offer.Accepted = true
+	r.ORM.Store.Save(&offer)
+	return offer, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-const (
-	nftContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-)
