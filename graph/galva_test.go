@@ -105,6 +105,24 @@ func TestGalva(t *testing.T) {
 
 		require.EqualError(t, err, "[{\"message\":\"Error 'VM execution error.' querying token owner\",\"path\":[\"makeOffer\"]}]")
 	})
+
+	t.Run("should panic accepting nonexistent offer", func(t *testing.T) {
+		var resp struct {
+			AcceptOffer struct {
+				ID       string
+				Accepted bool
+			}
+		}
+
+		err := c.Post(
+			`mutation($id: ID!, $userAddress: String!) { acceptOffer(input: {id: $id, userAddress: $userAddress}) { id accepted } }`,
+			&resp,
+			client.Var("id", "id"),
+			client.Var("userAddress", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"cannot find offer with id id\",\"path\":[\"acceptOffer\"]}]")
+	})
 }
 
 func setUp(orm *store.ORM) *client.Client {
