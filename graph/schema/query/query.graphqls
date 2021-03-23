@@ -1,4 +1,6 @@
 # GraphQL schema
 type Query {
   hello: String!
+  getProperty(id: ID!): Property!
+  getUser(address: String!): User!
 }
