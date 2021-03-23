@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -80,6 +81,29 @@ func TestGalva(t *testing.T) {
 		)
 
 		require.EqualError(t, err, "[{\"message\":\"Error 'VM execution error.' querying token owner\",\"path\":[\"addListing\"]}]")
+	})
+
+	t.Run("should panic making offer to a not tokenized property", func(t *testing.T) {
+		var resp struct {
+			MakeOffer struct {
+				Purpose  string
+				Size     string
+				Duration time.Time
+			}
+		}
+
+		err := c.Post(
+			`mutation($purpose: String!, $duration: Time!, $cost: String!, $size: String!, $userAddress: String!, $propertyId: Int!) { makeOffer(input: {purpose: $purpose, size: $size, duration: $duration, cost: $cost, userAddress: $userAddress, propertyId: $propertyId}) { purpose duration size cost } }`,
+			&resp,
+			client.Var("purpose", "Apple plantation"),
+			client.Var("duration", time.Now().Add(time.Hour*24*10)),
+			client.Var("size", "3.4"),
+			client.Var("cost", "32 wei"),
+			client.Var("userAddress", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
+			client.Var("propertyId", 8583),
+		)
+
+		require.EqualError(t, err, "[{\"message\":\"Error 'VM execution error.' querying token owner\",\"path\":[\"makeOffer\"]}]")
 	})
 }
 
