@@ -122,6 +122,10 @@ func (r *mutationResolver) AcceptOffer(ctx context.Context, input model.AcceptOf
 	if offer.Owner != utils.ParseAddress(input.UserAddress) {
 		return nil, errors.New(constants.ForbiddenToOwner)
 	}
+	// Offer should not be expired
+	if offer.ExpiresIn.Unix() < time.Now().Unix() {
+		return nil, errors.New(constants.Expired)
+	}
 	// Update offer
 	offer.Accepted = true
 	r.ORM.Store.Save(&offer)
