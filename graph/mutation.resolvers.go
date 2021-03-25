@@ -40,7 +40,6 @@ func (r *mutationResolver) AddUser(ctx context.Context, input model.RegisterUser
 }
 
 func (r *mutationResolver) AddListing(ctx context.Context, input model.PropertyInput) (*models.Property, error) {
-	property := &models.Property{}
 	// Validate the property is tokenized
 	newEth, err := eth.NewEthClient()
 	if err != nil {
@@ -68,7 +67,7 @@ func (r *mutationResolver) AddListing(ctx context.Context, input model.PropertyI
 		UserAddress:   parsedOwner,
 	}
 	r.ORM.Store.Save(&newListing)
-	return property, nil
+	return newListing, nil
 }
 
 func (r *mutationResolver) MakeOffer(ctx context.Context, input model.OfferInput) (*models.Offer, error) {
@@ -96,6 +95,9 @@ func (r *mutationResolver) MakeOffer(ctx context.Context, input model.OfferInput
 		return nil, fmt.Errorf("cannot find listing in market with id %v", input.PropertyID)
 	}
 	parsedOwner := owner.String()
+	if parsedOwner == input.UserAddress {
+		return nil, fmt.Errorf("cannot make offer to ownself")
+	}
 	// Create offer to property
 	id := models.NewID()
 	newOffer := &models.Offer{
@@ -104,10 +106,12 @@ func (r *mutationResolver) MakeOffer(ctx context.Context, input model.OfferInput
 		Size:        input.Size,
 		Duration:    input.Duration,
 		Cost:        input.Cost,
+		PropertyID:  int64(input.PropertyID),
 		Owner:       parsedOwner,
 		UserAddress: input.UserAddress,
-		ExpiresIn:   time.Now().Add(time.Hour * 24 * 7),
+		ExpiresIn:   time.Now().Add(time.Minute * 2),
 	}
+	r.ORM.Store.Save(&newOffer)
 	return newOffer, nil
 }
 
@@ -123,7 +127,7 @@ func (r *mutationResolver) AcceptOffer(ctx context.Context, input model.AcceptOf
 		return nil, errors.New(constants.ForbiddenToOwner)
 	}
 	// Offer should not be expired
-	if offer.ExpiresIn.Unix() < time.Now().Unix() {
+	if time.Now().Unix() >= offer.ExpiresIn.Unix() {
 		return nil, errors.New(constants.Expired)
 	}
 	// Update offer

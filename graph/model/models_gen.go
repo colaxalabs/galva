@@ -25,7 +25,6 @@ type PropertyInput struct {
 	PostalCode    string `json:"postalCode"`
 	Location      string `json:"location"`
 	SateliteImage string `json:"sateliteImage"`
-	UserAddress   string `json:"userAddress"`
 }
 
 type RegisterUser struct {

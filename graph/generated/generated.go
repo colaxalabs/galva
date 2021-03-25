@@ -529,7 +529,6 @@ input PropertyInput {
   postalCode: String!
   location: String!
   sateliteImage: String!
-  userAddress: String!
 }
 
 input OfferInput {
@@ -3480,14 +3479,6 @@ func (ec *executionContext) unmarshalInputPropertyInput(ctx context.Context, obj
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sateliteImage"))
 			it.SateliteImage, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "userAddress":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userAddress"))
-			it.UserAddress, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

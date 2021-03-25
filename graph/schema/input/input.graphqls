@@ -9,7 +9,6 @@ input PropertyInput {
   postalCode: String!
   location: String!
   sateliteImage: String!
-  userAddress: String!
 }
 
 input OfferInput {

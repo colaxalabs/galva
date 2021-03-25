@@ -2,7 +2,7 @@ package constants
 
 const (
 	ForbiddenToOwner    = "forbidden only to offer author"
-	NftContractAddress  = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+	NftContractAddress  = "0x4a41676f4BF4EEd9b07005CE93e0991d1E0E471e"
 	NonExistentProperty = "cannot find property"
 	NonExistentUser     = "cannot find user"
 	Expired             = "offer already expired"
