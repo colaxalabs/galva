@@ -119,7 +119,7 @@ func TestGalva(t *testing.T) {
 			client.Var("purpose", "Apple plantation"),
 			client.Var("duration", time.Now().Add(time.Hour*24*10)),
 			client.Var("size", "3.4"),
-			client.Var("cost", "32 wei"),
+			client.Var("cost", "32"),
 			client.Var("userAddress", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
 			client.Var("propertyId", 8583),
 		)
@@ -224,6 +224,24 @@ func TestGalva(t *testing.T) {
 		require.Equal(t, "0x40D054170DB5417369D170D1343063EeE55fb0cC", resp.AddListing.UserAddress)
 	})
 
+	t.Run("should querying info for listed property successfully", func(t *testing.T) {
+		var resp struct {
+			GetProperty struct {
+				PostalCode string
+				Location   string
+			}
+		}
+
+		c.MustPost(
+			`query($id: ID!) { getProperty(id: $id) { postalCode location } }`,
+			&resp,
+			client.Var("id", 9432),
+		)
+
+		require.Equal(t, "Mbale, Kenya", resp.GetProperty.Location)
+		require.Equal(t, "50300", resp.GetProperty.PostalCode)
+	})
+
 	t.Run("should panic making offer to ownself tokenized property", func(t *testing.T) {
 		var resp struct {
 			MakeOffer struct {
@@ -246,7 +264,7 @@ func TestGalva(t *testing.T) {
 			client.Var("purpose", "Apple plantation"),
 			client.Var("duration", time.Now().Add(time.Hour*24*10)),
 			client.Var("size", "3.4"),
-			client.Var("cost", "32 wei"),
+			client.Var("cost", "32"),
 			client.Var("userAddress", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
 			client.Var("propertyId", 9432),
 		)
@@ -278,7 +296,7 @@ func TestGalva(t *testing.T) {
 			client.Var("purpose", "Apple plantation"),
 			client.Var("duration", time.Now().Add(time.Hour*24*10)),
 			client.Var("size", "3.4"),
-			client.Var("cost", "32 wei"),
+			client.Var("cost", "32"),
 			client.Var("userAddress", "0x7f42226E0aB236Ebc578C642AdF2D0C7CE0A7FbB"),
 			client.Var("propertyId", 9432),
 		)
@@ -338,6 +356,68 @@ func TestGalva(t *testing.T) {
 		)
 
 		require.True(t, resp.AcceptOffer.Accepted)
+	})
+
+	t.Run("should query user and user market offers", func(t *testing.T) {
+		var resp struct {
+			GetUser struct {
+				Address string
+				Offers  []struct {
+					UserAddress string
+					Accepted    bool
+				}
+			}
+		}
+
+		c.MustPost(
+			`query($address: String!) { getUser(address: $address) { address offers { userAddress accepted } } }`,
+			&resp,
+			client.Var("address", "0x7f42226E0aB236Ebc578C642AdF2D0C7CE0A7FbB"),
+		)
+
+		require.Equal(t, 1, len(resp.GetUser.Offers))
+		require.Equal(t, "0x7f42226E0aB236Ebc578C642AdF2D0C7CE0A7FbB", resp.GetUser.Offers[0].UserAddress)
+		require.True(t, resp.GetUser.Offers[0].Accepted)
+	})
+
+	t.Run("should query user and user market listings", func(t *testing.T) {
+		var resp struct {
+			GetUser struct {
+				Address    string
+				Properties []struct {
+					ID int64
+				}
+			}
+		}
+
+		c.MustPost(
+			`query($address: String!) { getUser(address: $address) { address properties { id } } }`,
+			&resp,
+			client.Var("address", "0x40D054170DB5417369D170D1343063EeE55fb0cC"),
+		)
+
+		require.Equal(t, 1, len(resp.GetUser.Properties))
+		require.Equal(t, int64(9432), resp.GetUser.Properties[0].ID)
+	})
+
+	t.Run("should query property and property market offers", func(t *testing.T) {
+		var resp struct {
+			GetProperty struct {
+				ID     int64
+				Offers []struct {
+					PropertyID int64
+				}
+			}
+		}
+
+		c.MustPost(
+			`query($id: ID!) { getProperty(id: $id) { id offers{ propertyId } } }`,
+			&resp,
+			client.Var("id", 9432),
+		)
+
+		require.Equal(t, 1, len(resp.GetProperty.Offers))
+		require.Equal(t, int64(9432), resp.GetProperty.Offers[0].PropertyID)
 	})
 
 	t.Run("should panic accepting an expired offer", func(t *testing.T) {
