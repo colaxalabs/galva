@@ -7,9 +7,9 @@ import (
 type Offer struct {
 	ID             *ID       `gorm:"primary_key;not_null"`
 	Purpose        string    `gorm:"text;not_null"`
-	Size           string    `gorm:"not_null"`
+	Size           *Wei      `gorm:"type:text"`
 	Duration       time.Time `gorm:"not_null"`
-	Cost           string    `gorm:"not_null"`
+	Cost           *Wei      `gorm:"type:text"`
 	Owner          string    `gorm:"not_null"`
 	User           *User
 	UserAddress    string `gorm:"not_null"`

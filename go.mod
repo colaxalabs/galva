@@ -19,6 +19,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/satori/go.uuid v1.2.0
+	github.com/shopspring/decimal v1.2.0
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/ugorji/go v1.2.4 // indirect

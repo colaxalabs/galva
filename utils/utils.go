@@ -31,3 +31,8 @@ func ParseTime(unixTime int64) (time.Time, error) {
 	newTime, _ := time.Parse(time.RFC3339, unixFormat)
 	return newTime, nil
 }
+
+// HasHexPrefix returns true if input starts with 0x
+func HasHexPrefix(s string) bool {
+	return len(s) >= 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')
+}

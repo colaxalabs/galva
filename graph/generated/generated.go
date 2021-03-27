@@ -113,6 +113,10 @@ type MutationResolver interface {
 type OfferResolver interface {
 	ID(ctx context.Context, obj *models.Offer) (string, error)
 
+	Size(ctx context.Context, obj *models.Offer) (string, error)
+
+	Cost(ctx context.Context, obj *models.Offer) (string, error)
+
 	User(ctx context.Context, obj *models.Offer) (*models.User, error)
 
 	Property(ctx context.Context, obj *models.Offer) (*models.Property, error)
@@ -1005,14 +1009,14 @@ func (ec *executionContext) _Offer_size(ctx context.Context, field graphql.Colle
 		Object:     "Offer",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Size, nil
+		return ec.resolvers.Offer().Size(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1075,14 +1079,14 @@ func (ec *executionContext) _Offer_cost(ctx context.Context, field graphql.Colle
 		Object:     "Offer",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Cost, nil
+		return ec.resolvers.Offer().Cost(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3601,20 +3605,38 @@ func (ec *executionContext) _Offer(ctx context.Context, sel ast.SelectionSet, ob
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "size":
-			out.Values[i] = ec._Offer_size(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Offer_size(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "duration":
 			out.Values[i] = ec._Offer_duration(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "cost":
-			out.Values[i] = ec._Offer_cost(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Offer_cost(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "owner":
 			out.Values[i] = ec._Offer_owner(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

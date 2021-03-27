@@ -72,3 +72,6 @@ models:
         resolver: true # offer belongs to which property?
       user:
         resolver: true # offer belongs to which user?
+  Wei:
+    model:
+      - github.com/3dw1nM0535/galva/store/models.Wei

@@ -94,20 +94,27 @@ func (r *mutationResolver) MakeOffer(ctx context.Context, input model.OfferInput
 	if property.ID == 0 {
 		return nil, fmt.Errorf("cannot find listing in market with id %v", input.PropertyID)
 	}
-	parsedOwner := owner.String()
-	if parsedOwner == input.UserAddress {
-		return nil, fmt.Errorf("cannot make offer to ownself")
+	if owner.String() == input.UserAddress {
+		return nil, errors.New("cannot make offer to ownself")
 	}
 	// Create offer to property
 	id := models.NewID()
+	cost, err := models.NewWeiValueS(input.Cost)
+	if err != nil {
+		return nil, err
+	}
+	size, err := models.NewWeiValueS(input.Size)
+	if err != nil {
+		return nil, err
+	}
 	newOffer := &models.Offer{
 		ID:          id,
 		Purpose:     input.Purpose,
-		Size:        input.Size,
+		Size:        &size,
 		Duration:    input.Duration,
-		Cost:        input.Cost,
+		Cost:        &cost,
 		PropertyID:  int64(input.PropertyID),
-		Owner:       parsedOwner,
+		Owner:       owner.String(),
 		UserAddress: input.UserAddress,
 		ExpiresIn:   time.Now().Add(time.Minute * 2),
 	}
@@ -123,7 +130,7 @@ func (r *mutationResolver) AcceptOffer(ctx context.Context, input model.AcceptOf
 		return nil, fmt.Errorf("cannot find offer with id %v", input.ID)
 	}
 	// Validate that the offer owner is the requestor
-	if offer.Owner != utils.ParseAddress(input.UserAddress) {
+	if offer.Owner != input.UserAddress {
 		return nil, errors.New(constants.ForbiddenToOwner)
 	}
 	// Offer should not be expired
