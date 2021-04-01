@@ -2,12 +2,13 @@ package graph
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/3dw1nM0535/galva/graph/generated"
 	"github.com/3dw1nM0535/galva/store"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,7 @@ func TestGalva(t *testing.T) {
 	orm, _ := store.NewORM()
 
 	c := setUp(orm)
-	tearDown(orm)
+	defer tearDown(orm)
 
 	t.Run("hello world", func(t *testing.T) {
 		var resp map[string]string
