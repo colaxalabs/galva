@@ -54,7 +54,7 @@ func main() {
 		},
 	})
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) (userMessage error) {
-		// TODO: send panic to sentry
+		// TODO: error handling
 		log.Print(err)
 		debug.PrintStack()
 		return errors.New("user message on panic")

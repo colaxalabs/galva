@@ -18,7 +18,9 @@ var id string
 func TestGalva(t *testing.T) {
 	orm, _ := store.NewORM()
 
+	// setup store before running tests
 	c := setUp(orm)
+	// cleanup store after running tests
 	defer tearDown(orm)
 
 	t.Run("hello world", func(t *testing.T) {
