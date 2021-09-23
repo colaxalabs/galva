@@ -7,23 +7,21 @@ contract GalvaRegistry is IGalva {
     // Land model
     struct Record {
         string title;
-        uint256 area;
+        uint area;
         bytes32 owner;
     }
 
     // State
     mapping(bytes32 => Record) private records;
     mapping(bytes32 => bool) private nonces;
-    mapping(address => uint256) private rights;
-    uint256 private tokenizedRight;
+    mapping(address => uint) private rights;
+    uint private tokenizedRights;
 
     // Modifiers(called before function call)
     modifier taken(bytes32 node) {
         require(nonces[node] != true, "exists: record exists");
         _;
     }
-
-    constructor() {}
 
     /**
         * @notice Register property
@@ -35,7 +33,7 @@ contract GalvaRegistry is IGalva {
     */
     function attestProperty(
         string memory title,
-        uint256 area,
+        uint area,
         bytes32 node,
         address sender
     ) external virtual override taken(node) {
@@ -45,7 +43,7 @@ contract GalvaRegistry is IGalva {
             owner: node
         });
         // rights accumulated by the blockchain
-        tokenizedRight += area;
+        tokenizedRights += area;
         // rights accumulated by property owner
         rights[sender] += area;
     }
@@ -64,19 +62,19 @@ contract GalvaRegistry is IGalva {
         * @notice Address consumed rights
         * @dev Return accumulated rights for an address
         * @param who for who
-        * @return uint256
+        * @return uint
     */
-    function addressRights(address who) external virtual override returns (uint256) {
+    function addressRights(address who) external virtual override returns (uint) {
         return rights[who];
     }
 
     /**
         * @notice Blockhain consumed rights
         * @dev Returns rights accumulated by the blockchain
-        * @return uint256
+        * @return uint
     */
-    function blockchainConsumedRights() external virtual override returns (uint256) {
-        return tokenizedRight;
+    function blockchainConsumedRights() external virtual override returns (uint) {
+        return tokenizedRights;
     }
 
     /**

@@ -13,7 +13,7 @@ interface IGalva {
         * @param node property signature
         * @param sender who is uploading property
     */
-    function attestProperty(string memory title, uint256 area, bytes32 node, address sender) external;
+    function attestProperty(string memory title, uint area, bytes32 node, address sender) external;
 
     /**
         * @notice We assume a cryptographical truth
@@ -27,9 +27,9 @@ interface IGalva {
         * @notice Address consumed rights
         * @dev Return accumulated rights for an address
         * @param who for who
-        * @return uint256
+        * @return uint
     */
-    function addressRights(address who) external returns (uint256);
+    function addressRights(address who) external returns (uint);
 
     /**
         * @notice Claim property ownership
@@ -44,7 +44,7 @@ interface IGalva {
     /**
         * @notice Blockhain consumed rights
         * @dev Returns rights accumulated by the blockchain
-        * @return uint256
+        * @return uint
     */
-    function blockchainConsumedRights() external returns (uint256);
+    function blockchainConsumedRights() external returns (uint);
 }
