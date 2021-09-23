@@ -4,6 +4,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 
+require("./scripts/deploy.ts");
+
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.7.3",
