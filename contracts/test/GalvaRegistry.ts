@@ -22,7 +22,7 @@ describe("GalvaRegistry", () => {
   before("setup contracts", setupContracts);
 
   it("should always reject ether send to registry", async () => {
-    const user = accounts[1];
+    const user = accounts[1]; // account that will send tx
     await expect(user.sendTransaction({ to: registry.address, value: 1 })).to.be
       .reverted;
   });

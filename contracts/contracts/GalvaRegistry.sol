@@ -36,7 +36,7 @@ contract GalvaRegistry is IGalva {
         uint area,
         bytes32 node,
         address sender
-    ) external virtual override taken(node) {
+    ) external override taken(node) {
         records[node] = Record({
             title: title,
             area: area,
@@ -54,7 +54,7 @@ contract GalvaRegistry is IGalva {
         * @param node property signature
         * @return bool
     */
-    function recordExists(bytes32 node) external virtual override returns (bool) {
+    function recordExists(bytes32 node) external view override returns (bool) {
         return nonces[node] != false;
     }
 
@@ -64,7 +64,7 @@ contract GalvaRegistry is IGalva {
         * @param who for who
         * @return uint
     */
-    function addressRights(address who) external virtual override returns (uint) {
+    function addressRights(address who) external view override returns (uint) {
         return rights[who];
     }
 
@@ -73,7 +73,7 @@ contract GalvaRegistry is IGalva {
         * @dev Returns rights accumulated by the blockchain
         * @return uint
     */
-    function blockchainConsumedRights() external virtual override returns (uint) {
+    function blockchainConsumedRights() external view override returns (uint) {
         return tokenizedRights;
     }
 
@@ -85,7 +85,7 @@ contract GalvaRegistry is IGalva {
         * @param s the s value of the signature
         * @return address
     */
-    function claimOwnership(string memory title_number, uint8 v, bytes32 r, bytes32 s) external virtual override returns (address) {
+    function claimOwnership(string memory title_number, uint8 v, bytes32 r, bytes32 s) external pure override returns (address) {
         bytes32 message = recreateMsg(title_number);
         address claimer = ecrecover(message, v, r, s);
         return claimer;
