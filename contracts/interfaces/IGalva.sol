@@ -13,7 +13,7 @@ interface IGalva {
         * @param node property signature
         * @param sender who is uploading property
     */
-    function attestProperty(string memory title, uint area, bytes32 node, address sender) external;
+    function attestProperty(string memory title, uint area, bytes memory node, address sender) external;
 
     /**
         * @notice We assume a cryptographical truth
@@ -21,7 +21,7 @@ interface IGalva {
         * @param node property signature
         * @return bool
     */
-    function recordExists(bytes32 node) external returns (bool);
+    function recordExists(bytes memory node) external returns (bool);
 
     /**
         * @notice Address consumed rights
