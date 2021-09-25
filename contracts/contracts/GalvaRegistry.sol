@@ -8,18 +8,18 @@ contract GalvaRegistry is IGalva {
     struct Record {
         string title;
         uint area;
-        bytes32 owner;
+        bytes owner;
     }
 
     // State
-    mapping(bytes32 => Record) private records;
-    mapping(bytes32 => bool) private nonces;
+    mapping(bytes => Record) private records;
+    mapping(bytes => bool) private nonces;
     mapping(address => uint) private rights;
     uint private tokenizedRights;
 
     // Modifiers(called before function call)
-    modifier taken(bytes32 node) {
-        require(nonces[node] != true, "exists: record exists");
+    modifier taken(bytes memory node) {
+        require(!nonces[node], "exists: record exists");
         _;
     }
 
@@ -34,7 +34,7 @@ contract GalvaRegistry is IGalva {
     function attestProperty(
         string memory title,
         uint area,
-        bytes32 node,
+        bytes memory node,
         address sender
     ) external override taken(node) {
         records[node] = Record({
@@ -42,6 +42,8 @@ contract GalvaRegistry is IGalva {
             area: area,
             owner: node
         });
+        // mark title signature as already used
+        nonces[node] = true;
         // rights accumulated by the blockchain
         tokenizedRights += area;
         // rights accumulated by property owner
@@ -54,7 +56,7 @@ contract GalvaRegistry is IGalva {
         * @param node property signature
         * @return bool
     */
-    function recordExists(bytes32 node) external view override returns (bool) {
+    function recordExists(bytes memory node) external view override returns (bool) {
         return nonces[node] != false;
     }
 
