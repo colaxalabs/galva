@@ -1,18 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import './App.css';
 
 function App() {
-  // do we have an ethereum browser
-  const [isEthereumWindow, setIsEthereumWindow] = useState<boolean>(false);
-
-  useEffect(() => {
-    // @ts-ignore
-    setIsEthereumWindow(window.ethereum !== undefined);
-  }, [isEthereumWindow])
-
   return (
     <div>
-      Galva
+      <button>Login with Google</button>
     </div>
   );
 }
